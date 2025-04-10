@@ -106,10 +106,17 @@
 
         <section id="architettura_informazione">
           <h2>Architettura informazione</h2>
-          <p class="lead">Il progetto include la creazione del gioco battaglia navale su un sito web. Il sito ha una pagina principale 
-            con all'interno una modale per la login, un elenco delle partite in corso e degli online di cui è possibile visualizzare lo 
-            stato (se sono in partita o no), è anche possibile invitarli per poter giocarci assieme. Mentre se si è in partita si possono 
-            posizionare le navi e poter attacare l'avversario a turni.
+          <p class="lead">Il progetto prevede la realizzazione di un gioco online di Battaglia Navale. Gli utenti possono registrarsi ed effettuare il login attraverso una modale nella pagina principale. Una volta autenticati, possono visualizzare l’elenco delle partite in corso e la lista degli utenti online, distinguendo tra quelli liberi e quelli già impegnati in una partita.
+
+            È possibile inviare un invito a giocare a un utente libero semplicemente cliccando sul suo nome; se l'invito viene accettato, si avvia una nuova partita tra i due, se l'utente rifiuta la richiesta al mittente gli verrà inviata una notifica di rifiuto.
+            
+            All'inizio della partita, ogni giocatore ha la possibilità di posizionare manualmente le proprie navi inserendo le coordinate desiderate sulla propria griglia. La disposizione può essere orizzontale o verticale, e il sistema verifica che le posizioni scelte siano valide e non si sovrappongano ad altre navi.
+            
+            Durante il gioco, i turni sono alternati: il giocatore sceglie le coordinate su cui sparare nella griglia dell’avversario. Se il colpo va a segno, il giocatore ottiene un altro turno; in caso contrario, il turno passa all’avversario. Il sistema aggiorna in tempo reale lo stato della griglia, segnalando colpi a segno, mancati e navi affondate.
+
+            Vince chi distrugge per primo tutte le navi dell'avversario.
+            
+            La gestione delle partite, degli inviti e della comunicazione tra i giocatori avviene tramite WebSocket.
           </p>
           
         </section>
