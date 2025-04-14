@@ -103,13 +103,12 @@
         </section>
         
 		<hr class="divider">
-
-        <section id="architettura_informazione">
-          <h2>Architettura informazione</h2>
+    <section id="documentazione_funzionale">
+          <h2>Documentazione Funzionale</h2>
           <p class="lead">Il progetto prevede la realizzazione di un gioco online di Battaglia Navale. Gli utenti possono registrarsi ed effettuare il login attraverso una modale nella pagina principale. Una volta autenticati, possono visualizzare l’elenco delle partite in corso e la lista degli utenti online, distinguendo tra quelli liberi e quelli già impegnati in una partita.
 
             È possibile inviare un invito a giocare a un utente libero semplicemente cliccando sul suo nome; se l'invito viene accettato, si avvia una nuova partita tra i due, se l'utente rifiuta la richiesta al mittente gli verrà inviata una notifica di rifiuto.
-            
+
             All'inizio della partita, ogni giocatore ha la possibilità di posizionare manualmente le proprie navi inserendo le coordinate desiderate sulla propria griglia. La disposizione può essere orizzontale o verticale, e il sistema verifica che le posizioni scelte siano valide e non si sovrappongano ad altre navi.
             
             Durante il gioco, i turni sono alternati: il giocatore sceglie le coordinate su cui sparare nella griglia dell’avversario. Se il colpo va a segno, il giocatore ottiene un altro turno; in caso contrario, il turno passa all’avversario. Il sistema aggiorna in tempo reale lo stato della griglia, segnalando colpi a segno, mancati e navi affondate.
@@ -117,6 +116,77 @@
             Vince chi distrugge per primo tutte le navi dell'avversario.
             
             La gestione delle partite, degli inviti e della comunicazione tra i giocatori avviene tramite WebSocket.
+          </p>
+
+        <section id="architettura_informazione">
+          <h2>Architettura informazione</h2>
+          <p class="lead">
+            Architettura dell'informazione – Sito Battaglia Navale
+1. Home
+Introduzione al gioco (breve descrizione)
+
+Pulsanti:
+
+Login (modale)
+
+Registrazione (modale)
+
+Stato attuale utente:
+
+Se loggato → mostra dashboard
+
+Se non loggato → mostra solo login/registrazione
+
+2. Dashboard Utente (dopo il login)
+Lista utenti online
+
+Visualizza utenti con stato: libero / in partita
+
+Click su un utente libero → invia invito
+
+Elenco partite in corso
+
+Stato: in attesa / in corso / terminate
+
+Notifiche
+
+Inviti ricevuti
+
+Risposte agli inviti inviati
+
+Esito delle partite
+
+3. Schermata di gioco generale
+
+Regole del gioco
+
+Visualizzazione delle statistiche personali (partite giocate, vinte, perse)
+
+Logout
+
+4. Schermata di gioco
+Griglia propria
+
+Visualizzazione e gestione navi
+
+Stato celle (vuoto, colpito, mancato, affondato)
+
+Griglia avversario
+
+Dove si spara
+
+Stato colpi (mancato, colpito, affondato)
+
+Turno attuale
+
+Indicatore di chi deve giocare
+
+5. Posizionamento navi
+Prima dell’inizio partita:
+
+Interfaccia per posizionare le navi (click coordinate)
+
+Validazione delle posizioni
           </p>
           
         </section>
