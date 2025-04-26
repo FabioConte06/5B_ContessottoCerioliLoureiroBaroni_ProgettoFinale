@@ -1,4 +1,8 @@
-# Logs
+conf.json
+prod.conf.json
+copyconf.sh
+package-lock.json
+ Logs
 logs
 *.log
 npm-debug.log*
