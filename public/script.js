@@ -1,4 +1,4 @@
-// public/script.js
+// Connessione al server WebSocket
 const socket = io();
 
 const loginButton = document.getElementById("loginButton");
@@ -13,7 +13,6 @@ const userListElement = document.getElementById("userList");
 const messageInput = document.getElementById("message");
 const sendMessageButton = document.getElementById("sendMessage");
 const inviteListElement = document.getElementById("inviteList");
-
 const battleContainer = document.getElementById("battle-container");
 const playerGrid = document.getElementById("player-grid");
 const battleChatMessages = document.getElementById("battle-chat-messages");
@@ -22,6 +21,7 @@ const battleSendButton = document.getElementById("battle-send");
 
 let currentUsername = "";
 
+// Funzione per registrarsi
 const register = function(username, password) {
     fetch("https://ws.cipiaceinfo.it/credential/register", {
         method: "POST",
@@ -46,6 +46,7 @@ const register = function(username, password) {
     });
 };
 
+// Funzione per il login
 const login = function(email, password) {
     fetch("https://ws.cipiaceinfo.it/credential/login", {
         method: "POST",
@@ -71,7 +72,8 @@ const login = function(email, password) {
     });
 };
 
-loginButton.onclick = () => {
+// Bottoni login e registrazione
+loginButton.onclick = function() {
     if (loginEmail.value && loginPassword.value) {
         login(loginEmail.value, loginPassword.value);
     } else {
@@ -79,7 +81,7 @@ loginButton.onclick = () => {
     }
 };
 
-registerButton.onclick = () => {
+registerButton.onclick = function() {
     if (registerUsername.value && registerPassword.value) {
         register(registerUsername.value, registerPassword.value);
     } else {
@@ -87,20 +89,23 @@ registerButton.onclick = () => {
     }
 };
 
-sendMessageButton.onclick = () => {
+// Invio messaggio chat globale
+sendMessageButton.onclick = function() {
     if (messageInput.value) {
         socket.emit('chatMessage', { username: currentUsername, message: messageInput.value });
         messageInput.value = '';
     }
 };
 
-battleSendButton.onclick = () => {
+// Invio messaggio chat battaglia
+battleSendButton.onclick = function() {
     if (battleMessageInput.value) {
         socket.emit('chatMessage', { username: currentUsername, message: battleMessageInput.value });
         battleMessageInput.value = '';
     }
 };
 
+// Ricezione messaggi chat
 socket.on('chatMessage', function(data) {
     let container;
     if (battleContainer.classList.contains('hidden')) {
@@ -113,6 +118,7 @@ socket.on('chatMessage', function(data) {
     container.append(msg);
 });
 
+// Aggiornamento lista utenti
 socket.on('userList', function(users) {
     userListElement.innerHTML = '';
     for (let i = 0; i < users.length; i++) {
@@ -127,10 +133,12 @@ socket.on('userList', function(users) {
     }
 });
 
+// Funzione invio invito
 const sendInvite = function(socketId) {
     socket.emit('sendInvite', socketId);
 };
 
+// Ricezione invito
 socket.on('inviteReceived', function(data) {
     const div = document.createElement('div');
     div.textContent = "Hai ricevuto un invito da " + data.from;
@@ -154,10 +162,12 @@ socket.on('inviteReceived', function(data) {
     inviteListElement.append(div);
 });
 
+// Ricezione rifiuto invito
 socket.on('inviteDeclined', function(data) {
     alert(data.by + " ha rifiutato il tuo invito.");
 });
 
+// Inizio partita
 socket.on('gameStarted', function(data) {
     alert("Partita iniziata! ID partita: " + data.gameId);
     gameContainer.classList.add('hidden');
@@ -165,6 +175,7 @@ socket.on('gameStarted', function(data) {
     generateGrid();
 });
 
+// Generazione griglia del giocatore
 function generateGrid() {
     playerGrid.innerHTML = '';
     const grid = [];
@@ -205,6 +216,7 @@ function generateGrid() {
     }
 }
 
+// Controlla se si può piazzare la nave
 function canPlaceShip(grid, row, col, size, orientation) {
     if (orientation === 'H') {
         if (col + size > 10) return false;
@@ -220,6 +232,7 @@ function canPlaceShip(grid, row, col, size, orientation) {
     return true;
 }
 
+// Piazzamento nave sulla griglia
 function placeShip(grid, row, col, size, orientation) {
     if (orientation === 'H') {
         for (let i = 0; i < size; i++) {
