@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battaglia Navale</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <h1>Battaglia Navale</h1>
+
+    <!-- Impostazione del nome -->
+    <div>
+        <input type="text" id="playerName" placeholder="Inserisci il tuo nome">
+        <button id="setName">Imposta Nome</button>
+    </div>
+
+    <!-- Lista giocatori online -->
+    <div>
+        <h2>Giocatori Online</h2>
+        <ul id="userList"></ul>
+    </div>
+
+    <!-- Inviti -->
+    <div>
+        <h2>Inviti</h2>
+        <ul id="inviteList"></ul>
+    </div>
+
+    <!-- Chat -->
+    <div>
+        <h2>Chat</h2>
+        <input type="text" id="message" placeholder="Scrivi un messaggio">
+        <button id="sendMessage">Invia</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
