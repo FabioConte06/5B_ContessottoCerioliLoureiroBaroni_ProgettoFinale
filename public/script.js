@@ -1,3 +1,4 @@
+// public/script.js
 const socket = io();
 
 const loginButton = document.getElementById("loginButton");
@@ -12,6 +13,24 @@ const userListElement = document.getElementById("userList");
 const messageInput = document.getElementById("message");
 const sendMessageButton = document.getElementById("sendMessage");
 const inviteListElement = document.getElementById("inviteList");
+
+const battleContainer = document.createElement('div');
+battleContainer.id = 'battle-container';
+battleContainer.className = 'hidden';
+battleContainer.innerHTML = `
+  <div id="player-grid"></div>
+  <div id="battle-chat">
+    <div id="battle-chat-messages"></div>
+    <input type="text" id="battle-message" placeholder="Scrivi un messaggio">
+    <button id="battle-send">Invia</button>
+  </div>
+`;
+document.body.append(battleContainer);
+
+const playerGrid = document.getElementById("player-grid");
+const battleChatMessages = document.getElementById("battle-chat-messages");
+const battleMessageInput = document.getElementById("battle-message");
+const battleSendButton = document.getElementById("battle-send");
 
 const register = (username, password) => {
     fetch("https://ws.cipiaceinfo.it/credential/register", {
@@ -67,11 +86,18 @@ sendMessageButton.onclick = () => {
     }
 };
 
+battleSendButton.onclick = () => {
+    if (battleMessageInput.value) {
+        socket.emit('chatMessage', battleMessageInput.value);
+        battleMessageInput.value = '';
+    }
+};
+
 socket.on('chatMessage', (message) => {
-    const chatContainer = document.getElementById("chatContainer");
+    const container = battleContainer.classList.contains('hidden') ? document.getElementById("chatContainer") : battleChatMessages;
     const msg = document.createElement('div');
     msg.textContent = message;
-    chatContainer.appendChild(msg);
+    container.append(msg);
 });
 
 socket.on('userList', (users) => {
@@ -82,8 +108,8 @@ socket.on('userList', (users) => {
         const btn = document.createElement('button');
         btn.textContent = 'Invita';
         btn.onclick = () => sendInvite(user.socketId);
-        li.appendChild(btn);
-        userListElement.appendChild(li);
+        li.append(btn);
+        userListElement.append(li);
     });
 });
 
@@ -92,26 +118,25 @@ const sendInvite = (socketId) => {
 };
 
 socket.on('inviteReceived', ({ from, inviterId }) => {
-    const inviteElement = document.createElement('div');
-    inviteElement.textContent = `Hai ricevuto un invito da ${from}`;
+    const div = document.createElement('div');
+    div.textContent = `Hai ricevuto un invito da ${from}`;
 
-    const acceptButton = document.createElement('button');
-    acceptButton.textContent = 'Accetta';
-    acceptButton.onclick = () => {
+    const acceptBtn = document.createElement('button');
+    acceptBtn.textContent = 'Accetta';
+    acceptBtn.onclick = () => {
         socket.emit('acceptInvite', { inviterId });
-        inviteElement.remove();
+        div.remove();
     };
 
-    const declineButton = document.createElement('button');
-    declineButton.textContent = 'Rifiuta';
-    declineButton.onclick = () => {
+    const declineBtn = document.createElement('button');
+    declineBtn.textContent = 'Rifiuta';
+    declineBtn.onclick = () => {
         socket.emit('declineInvite', inviterId);
-        inviteElement.remove();
+        div.remove();
     };
 
-    inviteElement.appendChild(acceptButton);
-    inviteElement.appendChild(declineButton);
-    inviteListElement.appendChild(inviteElement);
+    div.append(acceptBtn, declineBtn);
+    inviteListElement.append(div);
 });
 
 socket.on('inviteDeclined', ({ by }) => {
@@ -120,4 +145,59 @@ socket.on('inviteDeclined', ({ by }) => {
 
 socket.on('gameStarted', ({ gameId }) => {
     alert(`Partita iniziata! ID partita: ${gameId}`);
+    gameContainer.classList.add('hidden');
+    battleContainer.classList.remove('hidden');
+    generateGrid();
 });
+
+function generateGrid() {
+    playerGrid.innerHTML = '';
+    const grid = Array.from({ length: 10 }, () => Array(10).fill(0));
+    const ships = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
+
+    ships.forEach(size => {
+        let placed = false;
+        while (!placed) {
+            const orientation = Math.random() < 0.5 ? 'H' : 'V';
+            const row = Math.floor(Math.random() * 10);
+            const col = Math.floor(Math.random() * 10);
+            if (canPlaceShip(grid, row, col, size, orientation)) {
+                placeShip(grid, row, col, size, orientation);
+                placed = true;
+            }
+        }
+    });
+
+    for (let i = 0; i < 10; i++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        for (let j = 0; j < 10; j++) {
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'cell';
+            if (grid[i][j] === 1) {
+                cellDiv.classList.add('ship');
+            }
+            rowDiv.append(cellDiv);
+        }
+        playerGrid.append(rowDiv);
+    }
+}
+
+function canPlaceShip(grid, row, col, size, orientation) {
+    if (orientation === 'H') {
+        if (col + size > 10) return false;
+        for (let i = 0; i < size; i++) if (grid[row][col + i] !== 0) return false;
+    } else {
+        if (row + size > 10) return false;
+        for (let i = 0; i < size; i++) if (grid[row + i][col] !== 0) return false;
+    }
+    return true;
+}
+
+function placeShip(grid, row, col, size, orientation) {
+    if (orientation === 'H') {
+        for (let i = 0; i < size; i++) grid[row][col + i] = 1;
+    } else {
+        for (let i = 0; i < size; i++) grid[row + i][col] = 1;
+    }
+}

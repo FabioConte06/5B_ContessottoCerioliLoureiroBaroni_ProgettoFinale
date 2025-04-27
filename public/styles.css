@@ -40,3 +40,48 @@ button:hover {
     background-color: #007BFF;
     color: white;
 }
+
+#battle-container {
+    display: flex;
+    gap: 20px;
+}
+
+#player-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 2px;
+}
+
+.row {
+    display: contents;
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    background-color: #e0e0e0;
+    border: 1px solid #999;
+}
+
+.cell.ship {
+    background-color: #4caf50;
+}
+
+#battle-chat {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+}
+
+#battle-chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+#battle-message {
+    margin-bottom: 5px;
+}
