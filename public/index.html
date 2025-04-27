@@ -10,44 +10,6 @@
 
   <h1>Battaglia Navale</h1>
 
-  <div id="login-register-container">
-    <div id="login-container">
-      <h2>Login</h2>
-      <input type="email" id="loginEmail" placeholder="Email">
-      <input type="password" id="loginPassword" placeholder="Password">
-      <button id="loginButton">Login</button>
-    </div>
-
-    <div id="register-container">
-      <h2>Registrati</h2>
-      <input type="text" id="registerUsername" placeholder="Nome utente">
-      <input type="password" id="registerPassword" placeholder="Password">
-      <button id="registerButton">Registrati</button>
-    </div>
-  </div>
-
-  <div id="game-container" class="hidden">
-    <h2>Giocatori Online</h2>
-    <ul id="userList"></ul>
-
-    <h2>Inviti</h2>
-    <ul id="inviteList"></ul>
-
-    <h2>Chat Globale</h2>
-    <div id="chatContainer"></div>
-    <input type="text" id="message" placeholder="Scrivi un messaggio">
-    <button id="sendMessage">Invia</button>
-  </div>
-
-  <div id="battle-container" class="hidden">
-    <div id="player-grid"></div>
-    <div id="battle-chat">
-      <div id="battle-chat-messages"></div>
-      <input type="text" id="battle-message" placeholder="Scrivi un messaggio">
-      <button id="battle-send">Invia</button>
-    </div>
-  </div>
-
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 
