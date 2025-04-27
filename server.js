@@ -28,8 +28,23 @@ io.on('connection', (socket) => {
     socket.on('sendInvite', (invitedUserId) => {
         const invitedUser = userList.find(user => user.socketId === invitedUserId);
         if (invitedUser) {
-            io.to(invitedUserId).emit('inviteReceived', { from: onlineUsers[socket.id] });
+            io.to(invitedUserId).emit('inviteReceived', { from: onlineUsers[socket.id], inviterId: socket.id });
         }
+    });
+
+    socket.on('acceptInvite', ({ inviterId }) => {
+        const gameId = `game-${Date.now()}`;
+        games[gameId] = {
+            players: [socket.id, inviterId],
+            moves: [],
+        };
+        socket.join(gameId);
+        io.to(inviterId).emit('gameStarted', { gameId });
+        io.to(socket.id).emit('gameStarted', { gameId });
+    });
+
+    socket.on('declineInvite', (inviterId) => {
+        io.to(inviterId).emit('inviteDeclined', { by: onlineUsers[socket.id] });
     });
 
     socket.on('chatMessage', (message) => {
