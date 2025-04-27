@@ -7,11 +7,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
     <h1>Battaglia Navale</h1>
 
     <div id="login-register-container">
-        <!-- Login Form -->
         <div id="login-container">
             <h2>Login</h2>
             <input type="email" id="loginEmail" placeholder="Email">
@@ -19,7 +17,6 @@
             <button id="loginButton">Login</button>
         </div>
 
-        <!-- Registration Form -->
         <div id="register-container">
             <h2>Registrati</h2>
             <input type="text" id="registerUsername" placeholder="Nome utente">
@@ -36,12 +33,12 @@
         <ul id="inviteList"></ul>
 
         <h2>Chat</h2>
+        <div id="chatContainer"></div>
         <input type="text" id="message" placeholder="Scrivi un messaggio">
         <button id="sendMessage">Invia</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
-
 </body>
 </html>

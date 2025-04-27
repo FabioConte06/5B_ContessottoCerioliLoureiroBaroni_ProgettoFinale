@@ -8,10 +8,13 @@ const registerUsername = document.getElementById("registerUsername");
 const registerPassword = document.getElementById("registerPassword");
 const gameContainer = document.getElementById("game-container");
 const loginRegisterContainer = document.getElementById("login-register-container");
+const userListElement = document.getElementById("userList");
+const messageInput = document.getElementById("message");
+const sendMessageButton = document.getElementById("sendMessage");
+const inviteListElement = document.getElementById("inviteList");
 
 const isLogged = sessionStorage.getItem("Logged") === "true";
 
-// Funzione per gestire la registrazione
 const register = (username, password) => {
     fetch("https://ws.cipiaceinfo.it/credential/register", {
         method: "POST",
@@ -24,10 +27,11 @@ const register = (username, password) => {
     .then(response => response.json())
     .then(result => {
         if (result.result === "Ok") {
-            alert("Registrazione completata con successo!");
+            alert("Registrazione completata!");
             sessionStorage.setItem("Logged", "true");
             loginRegisterContainer.classList.add("hidden");
             gameContainer.classList.remove("hidden");
+            socket.emit('register', { username });
         } else {
             alert("Registrazione fallita.");
         }
@@ -35,7 +39,6 @@ const register = (username, password) => {
     .catch(() => alert("Registrazione fallita."));
 };
 
-// Funzione per gestire il login
 const login = (email, password) => {
     fetch("https://ws.cipiaceinfo.it/credential/login", {
         method: "POST",
@@ -48,29 +51,19 @@ const login = (email, password) => {
     .then(response => response.json())
     .then(result => {
         if (result.result === true) {
-            alert("Login effettuato con successo!");
+            alert("Login effettuato!");
             sessionStorage.setItem("Logged", "true");
             loginRegisterContainer.classList.add("hidden");
             gameContainer.classList.remove("hidden");
+            const username = email.split('@')[0];
+            socket.emit('register', { username });
         } else {
-            alert("Credenziali errate.");
+            alert("Login fallito.");
         }
     })
     .catch(() => alert("Login fallito."));
 };
 
-// Gestione click per la registrazione
-registerButton.onclick = () => {
-    const username = registerUsername.value;
-    const password = registerPassword.value;
-    if (username && password) {
-        register(username, password);
-    } else {
-        alert("Compila tutti i campi.");
-    }
-};
-
-// Gestione click per il login
 loginButton.onclick = () => {
     const email = loginEmail.value;
     const password = loginPassword.value;
@@ -81,62 +74,59 @@ loginButton.onclick = () => {
     }
 };
 
-// Funzione per inviare invito
-function sendInvite(invitedUserId) {
-    socket.emit('sendInvite', invitedUserId);
-}
+registerButton.onclick = () => {
+    const username = registerUsername.value;
+    const password = registerPassword.value;
+    if (username && password) {
+        register(username, password);
+    } else {
+        alert("Compila tutti i campi.");
+    }
+};
 
-// Gestione della lista degli utenti
-socket.on('list', (userList) => {
-    const userListElement = document.getElementById('userList');
-    userListElement.innerHTML = '';  // Svuota la lista prima di aggiornare
-    userList.forEach(user => {
+sendMessageButton.onclick = () => {
+    const message = messageInput.value;
+    if (message) {
+        socket.emit('chatMessage', message);
+        messageInput.value = '';
+    }
+};
+
+socket.on('chatMessage', (message) => {
+    const chatContainer = document.getElementById("chatContainer");
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    chatContainer.appendChild(messageElement);
+});
+
+socket.on('userList', (users) => {
+    userListElement.innerHTML = '';
+    users.forEach(user => {
         const li = document.createElement('li');
         li.textContent = user.name;
-
-        // Crea un pulsante per inviare invito
         const inviteButton = document.createElement('button');
         inviteButton.textContent = 'Invita';
         inviteButton.onclick = () => sendInvite(user.socketId);
-
         li.appendChild(inviteButton);
         userListElement.appendChild(li);
     });
 });
 
-// Gestione degli inviti ricevuti
-socket.on('inviteReceived', (data) => {
-    const inviteListElement = document.getElementById('inviteList');
-    const li = document.createElement('li');
-    li.textContent = `Invito da ${data.from}`;
-
-    // Pulsante per accettare l'invito
-    const acceptButton = document.createElement('button');
-    acceptButton.textContent = 'Accetta';
-    acceptButton.onclick = () => acceptInvite(data.from);
-
-    li.appendChild(acceptButton);
-    inviteListElement.appendChild(li);
-});
-
-// Funzione per accettare un invito
-function acceptInvite(inviterId) {
-    const gameId = `${socket.id}-${inviterId}`;
-    socket.emit('acceptInvite', { gameId, invitedUserId: inviterId });
-}
-
-// Quando una partita inizia
-socket.on('gameStarted', (data) => {
-    alert(`La partita è iniziata! ID partita: ${data.gameId}`);
-});
-
-// Gestione della chat
-document.getElementById('sendMessage').onclick = () => {
-    const message = document.getElementById('message').value;
-    socket.emit('message', message);
+const sendInvite = (socketId) => {
+    socket.emit('sendInvite', socketId);
 };
 
-// Gestione dei messaggi di chat
-socket.on('chat', (response) => {
-    console.log(response);
+socket.on('inviteReceived', (fromData) => {
+    const inviteElement = document.createElement('div');
+    inviteElement.textContent = `Hai ricevuto un invito da ${fromData.from}`;
+    inviteListElement.appendChild(inviteElement);
+});
+
+
+// --- server.js (server side, fix solo chatMessage) ---
+
+socket.on('chatMessage', (message) => {
+    const userName = onlineUsers[socket.id];
+    const response = `${userName}: ${message}`;
+    io.emit('chatMessage', response);
 });
