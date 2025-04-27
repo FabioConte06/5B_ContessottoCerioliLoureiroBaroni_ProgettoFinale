@@ -6,6 +6,10 @@ const canvas2 = document.getElementById('canvas2');
 const ctx1 = canvas1.getContext('2d');
 const ctx2 = canvas2.getContext('2d');
 const turnoText = document.getElementById('turno');
+const nextTurn = document.getElementById('nextTurn');
+const form = document.getElementById('form');
+const overlay = document.getElementById('overlay');
+
 let grid1 = Array.from({ length: rows }, () => Array(cols).fill(0));
 let grid2 = Array.from({ length: rows }, () => Array(cols).fill(0));  
 let turno = 1;
@@ -60,9 +64,15 @@ function drawGrid(ctx, grid, hideShips) {
 }
 
 function aggiorna() {
-  drawGrid(ctx1, grid1, turno !== 2); 
-  drawGrid(ctx2, grid2, turno !== 1);
+  drawGrid(ctx1, grid1, turno !== 1); 
+  drawGrid(ctx2, grid2, turno !== 2);
   turnoText.innerText = `Turno: Giocatore ${turno}`;
+}
+
+nextTurn.onclick = function() {
+    aggiorna();
+    form.style.display = "none"
+    overlay.style.display = "none"
 }
 
 function gestisciClick(canvas, gridNemico) {
@@ -76,11 +86,18 @@ function gestisciClick(canvas, gridNemico) {
       if (i >= 0 && i < rows && j >= 0 && j < cols) {
         if (gridNemico[i][j] === 1) {
           gridNemico[i][j] = 2;
-        } else if (gridNemico[i][j] === 0) {
+          aggiorna();
+        } 
+        
+        else if (gridNemico[i][j] === 0) {
           gridNemico[i][j] = 3;
+          
+          turno = turno === 1 ? 2 : 1;
+
+          form.style.display = "inline"
+          overlay.style.display = "inline"
         }
-        turno = turno === 1 ? 2 : 1;
-        aggiorna();
+        
       }
     }
   });

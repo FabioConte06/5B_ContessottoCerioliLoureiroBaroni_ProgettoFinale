@@ -1,5 +1,36 @@
 /* public/styles.css */
 
+#modale {
+    margin-top: 20px;
+    display: none;
+    margin-bottom: 20px;
+    margin-right: 10px;
+}
+
+#overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 999;
+}
+
+#form {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;   
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
 body {
     font-family: Arial, sans-serif;
 }
@@ -94,3 +125,4 @@ button:hover {
 #battle-message {
     margin-bottom: 5px;
 }
+
