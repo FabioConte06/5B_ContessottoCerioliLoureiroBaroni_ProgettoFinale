@@ -1,86 +1,142 @@
 const socket = io();
 
-// Gestione dell'invio del nome
-document.getElementById('setName').onclick = () => {
-    const name = document.getElementById('playerName').value;
-    socket.emit('setName', name);
+const loginButton = document.getElementById("loginButton");
+const registerButton = document.getElementById("registerButton");
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const registerUsername = document.getElementById("registerUsername");
+const registerPassword = document.getElementById("registerPassword");
+const gameContainer = document.getElementById("game-container");
+const loginRegisterContainer = document.getElementById("login-register-container");
+
+const isLogged = sessionStorage.getItem("Logged") === "true";
+
+// Funzione per gestire la registrazione
+const register = (username, password) => {
+    fetch("https://ws.cipiaceinfo.it/credential/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            key: "3819207b-2545-44f5-9bce-560b484b2f0f",
+        },
+        body: JSON.stringify({ username, password }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.result === "Ok") {
+            alert("Registrazione completata con successo!");
+            sessionStorage.setItem("Logged", "true");
+            loginRegisterContainer.classList.add("hidden");
+            gameContainer.classList.remove("hidden");
+        } else {
+            alert("Registrazione fallita.");
+        }
+    })
+    .catch(() => alert("Registrazione fallita."));
 };
 
-// Visualizzazione della lista utenti online
-socket.on('list', (userList) => {
-    const userListElement = document.getElementById('userList');
-    userListElement.innerHTML = ''; 
-
-    userList.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = `${user.name} (${user.online ? 'Online' : 'Offline'})`;
-
-        if (user.online) {
-            li.onclick = () => sendInvite(user.socketId);
+// Funzione per gestire il login
+const login = (email, password) => {
+    fetch("https://ws.cipiaceinfo.it/credential/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            key: "3819207b-2545-44f5-9bce-560b484b2f0f",
+        },
+        body: JSON.stringify({ email, password }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.result === true) {
+            alert("Login effettuato con successo!");
+            sessionStorage.setItem("Logged", "true");
+            loginRegisterContainer.classList.add("hidden");
+            gameContainer.classList.remove("hidden");
+        } else {
+            alert("Credenziali errate.");
         }
+    })
+    .catch(() => alert("Login fallito."));
+};
 
-        userListElement.innerHTML += li.outerHTML;
-    });
-});
+// Gestione click per la registrazione
+registerButton.onclick = () => {
+    const username = registerUsername.value;
+    const password = registerPassword.value;
+    if (username && password) {
+        register(username, password);
+    } else {
+        alert("Compila tutti i campi.");
+    }
+};
 
-// Funzione per inviare inviti
+// Gestione click per il login
+loginButton.onclick = () => {
+    const email = loginEmail.value;
+    const password = loginPassword.value;
+    if (email && password) {
+        login(email, password);
+    } else {
+        alert("Compila tutti i campi.");
+    }
+};
+
+// Funzione per inviare invito
 function sendInvite(invitedUserId) {
     socket.emit('sendInvite', invitedUserId);
 }
 
-// Gestione dell'invito ricevuto
+// Gestione della lista degli utenti
+socket.on('list', (userList) => {
+    const userListElement = document.getElementById('userList');
+    userListElement.innerHTML = '';  // Svuota la lista prima di aggiornare
+    userList.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = user.name;
+
+        // Crea un pulsante per inviare invito
+        const inviteButton = document.createElement('button');
+        inviteButton.textContent = 'Invita';
+        inviteButton.onclick = () => sendInvite(user.socketId);
+
+        li.appendChild(inviteButton);
+        userListElement.appendChild(li);
+    });
+});
+
+// Gestione degli inviti ricevuti
 socket.on('inviteReceived', (data) => {
     const inviteListElement = document.getElementById('inviteList');
-    inviteListElement.innerHTML = '';
-
     const li = document.createElement('li');
     li.textContent = `Invito da ${data.from}`;
 
+    // Pulsante per accettare l'invito
     const acceptButton = document.createElement('button');
     acceptButton.textContent = 'Accetta';
-    acceptButton.onclick = () => acceptInvite(data.from, li);
+    acceptButton.onclick = () => acceptInvite(data.from);
 
-    const declineButton = document.createElement('button');
-    declineButton.textContent = 'Rifiuta';
-    declineButton.onclick = () => declineInvite(data.from, li);
-
-    li.innerHTML += acceptButton.outerHTML + declineButton.outerHTML;
-    inviteListElement.innerHTML += li.outerHTML;
+    li.appendChild(acceptButton);
+    inviteListElement.appendChild(li);
 });
 
-// Funzione per accettare l'invito
-function acceptInvite(inviterId, inviteElement) {
+// Funzione per accettare un invito
+function acceptInvite(inviterId) {
     const gameId = `${socket.id}-${inviterId}`;
     socket.emit('acceptInvite', { gameId, invitedUserId: inviterId });
-    inviteElement.remove();
 }
 
-// Funzione per rifiutare l'invito
-function declineInvite(inviterId, inviteElement) {
-    socket.emit('declineInvite', inviterId);
-    inviteElement.remove();
-}
-
-// Gestione dell'inizio della partita
+// Quando una partita inizia
 socket.on('gameStarted', (data) => {
     alert(`La partita è iniziata! ID partita: ${data.gameId}`);
 });
 
-// Funzione per inviare messaggi in chat
+// Gestione della chat
 document.getElementById('sendMessage').onclick = () => {
     const message = document.getElementById('message').value;
     socket.emit('message', message);
-    displayMessage(message, 'Me');
 };
 
-// Visualizzazione dei messaggi in chat
-socket.on('chat', (message) => {
-    displayMessage(message, 'L\'altro giocatore');
+// Gestione dei messaggi di chat
+socket.on('chat', (response) => {
+    console.log(response);
 });
-
-// Funzione per aggiungere i messaggi alla chat
-function displayMessage(message, sender) {
-    const chatBox = document.getElementById('chatBox');
-    chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
-    document.getElementById('message').value = '';
-}

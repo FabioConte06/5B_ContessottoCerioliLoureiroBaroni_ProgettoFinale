@@ -10,26 +10,31 @@
 
     <h1>Battaglia Navale</h1>
 
-    <!-- Impostazione del nome -->
-    <div>
-        <input type="text" id="playerName" placeholder="Inserisci il tuo nome">
-        <button id="setName">Imposta Nome</button>
+    <div id="login-register-container">
+        <!-- Login Form -->
+        <div id="login-container">
+            <h2>Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button id="loginButton">Login</button>
+        </div>
+
+        <!-- Registration Form -->
+        <div id="register-container">
+            <h2>Registrati</h2>
+            <input type="text" id="registerUsername" placeholder="Nome utente">
+            <input type="password" id="registerPassword" placeholder="Password">
+            <button id="registerButton">Registrati</button>
+        </div>
     </div>
 
-    <!-- Lista giocatori online -->
-    <div>
+    <div id="game-container" class="hidden">
         <h2>Giocatori Online</h2>
         <ul id="userList"></ul>
-    </div>
 
-    <!-- Inviti -->
-    <div>
         <h2>Inviti</h2>
         <ul id="inviteList"></ul>
-    </div>
 
-    <!-- Chat -->
-    <div>
         <h2>Chat</h2>
         <input type="text" id="message" placeholder="Scrivi un messaggio">
         <button id="sendMessage">Invia</button>
@@ -37,5 +42,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
+
 </body>
 </html>
