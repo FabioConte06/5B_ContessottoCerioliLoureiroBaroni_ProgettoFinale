@@ -92,7 +92,12 @@ function gestisciClick(canvas, gridNemico) {
         else if (gridNemico[i][j] === 0) {
           gridNemico[i][j] = 3;
           
-          turno = turno === 1 ? 2 : 1;
+          if (turno == 1) {
+            turno = 2
+          }
+          else {
+            turno = 1
+          }
 
           form.style.display = "inline"
           overlay.style.display = "inline"
