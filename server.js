@@ -11,7 +11,6 @@ const io = new Server(server);
 
 const onlineUsers = {};
 let userList = [];
-const games = {};
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -34,11 +33,6 @@ io.on('connection', (socket) => {
 
     socket.on('acceptInvite', ({ inviterId }) => {
         const gameId = `game-${Date.now()}`;
-        games[gameId] = {
-            players: [socket.id, inviterId],
-            moves: [],
-        };
-        socket.join(gameId);
         io.to(inviterId).emit('gameStarted', { gameId });
         io.to(socket.id).emit('gameStarted', { gameId });
     });
@@ -47,9 +41,8 @@ io.on('connection', (socket) => {
         io.to(inviterId).emit('inviteDeclined', { by: onlineUsers[socket.id] });
     });
 
-    socket.on('chatMessage', (message) => {
-        const userName = onlineUsers[socket.id];
-        io.emit('chatMessage', `${userName}: ${message}`);
+    socket.on('chatMessage', ({ username, message }) => {
+        io.emit('chatMessage', { username, message });
     });
 
     socket.on('disconnect', () => {

@@ -1,10 +1,11 @@
-/* Stili base */
+/* public/styles.css */
+
 body {
     font-family: Arial, sans-serif;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 h1, h2 {
@@ -17,9 +18,9 @@ input, button {
     padding: 10px;
 }
 
-/* Stile per le liste */
 ul {
     list-style-type: none;
+    padding: 0;
 }
 
 li {
@@ -29,6 +30,7 @@ li {
     border-radius: 5px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 button {
@@ -43,7 +45,10 @@ button:hover {
 
 #battle-container {
     display: flex;
-    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 50px;
+    margin-top: 30px;
 }
 
 #player-grid {
@@ -72,6 +77,10 @@ button:hover {
     display: flex;
     flex-direction: column;
     width: 250px;
+    height: 320px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #fafafa;
 }
 
 #battle-chat-messages {
