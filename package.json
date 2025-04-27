@@ -1,4 +1,23 @@
 {
+  "name": "5b_contessottocerioliloureirobaroni_progettofinale",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/FabioConte06/5B_ContessottoCerioliLoureiroBaroni_ProgettoFinale#readme",
+  "bugs": {
+    "url": "https://github.com/FabioConte06/5B_ContessottoCerioliLoureiroBaroni_ProgettoFinale/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FabioConte06/5B_ContessottoCerioliLoureiroBaroni_ProgettoFinale.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^5.1.0",
     "socket.io": "^4.8.1"
