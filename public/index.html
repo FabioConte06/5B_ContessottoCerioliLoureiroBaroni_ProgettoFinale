@@ -4,40 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battaglia Navale</title>
-  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+  <h1>Battaglia Navale</h1>
+
   <div id="login-section">
-    <h1>Login</h1>
-    <input type="text" id="username" placeholder="Username" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button id="login-button">Accedi</button>
-    <p>Non hai un account? <button id="show-register">Registrati</button></p>
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="login-button">Login</button>
   </div>
 
-  <div id="register-section" style="display: none;">
-    <h1>Registrazione</h1>
-    <input type="text" id="register-username" placeholder="Username" required>
-    <input type="email" id="register-email" placeholder="Email (solo @itis-molinari.eu)" required>
-    <input type="password" id="register-password" placeholder="Password" required>
+  <div id="register-section">
+    <h2>Registrazione</h2>
+    <input type="text" id="register-username" placeholder="Username">
+    <input type="email" id="register-email" placeholder="Email (@itis-molinari.eu)">
     <button id="register-button">Registrati</button>
-    <p>Hai già un account? <button id="show-login">Accedi</button></p>
   </div>
 
-  <div id="game-section" style="display: none;">
-    <h1>Battaglia Navale</h1>
-    <canvas id="canvas1" width="500" height="500"></canvas>
-    <canvas id="canvas2" width="500" height="500"></canvas>
-    <p id="turno">Turno: Giocatore 1</p>
-    <div id="form">
-      Tocca al prossimo giocatore
-      <button id="nextTurn">Prossimo turno</button>
-    </div>
-    <div id="overlay"></div>
-    <script src="gioco.js"></script>
+  <canvas id="canvas1" width="500" height="500"></canvas>
+  <canvas id="canvas2" width="500" height="500"></canvas>
+
+  <p id="turno">Turno: Giocatore 1</p>
+
+  <div id="form">
+    Tocca al prossimo giocatore
+    <button id="nextTurn">Prossimo turno</button>
   </div>
 
-  <script src="login.js"></script>
+  <div id="overlay"></div>
+
   <script src="script.js"></script>
+  <script src="login.js"></script>
+
 </body>
 </html>
