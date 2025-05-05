@@ -2,6 +2,7 @@ conf.json
 prod.conf.json
 copyconf.sh
 package-lock.json
+ca.pem
 # Logs
 logs
 *.log
