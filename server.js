@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
-const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer'); // Importa nodemailer per l'invio delle email
 const database = require('./database');
 
 const conf = JSON.parse(fs.readFileSync('./conf.json'));
@@ -16,17 +16,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const onlineUsers = {};
 
-(async () => {
-    try {
-        await database.createTable();
-        console.log("Tabella creata o già esistente.");
-    } catch (error) {
-        console.error("Errore durante la creazione della tabella:", error);
-    }
-})();
-
-async function create_trasporter(){
-    return transporter = nodemailer.createTransport({
+// Funzione per creare il trasportatore di nodemailer
+async function createTransporter() {
+    return nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
         secure: false,
@@ -37,36 +29,37 @@ async function create_trasporter(){
     });
 }
 
-const inviaEmail = async (body, password) =>{
-    console.log(password);
-    const transporter = await create_trasporter()
+// Funzione per inviare email
+const inviaEmail = async (body, password) => {
+    const transporter = await createTransporter();
     const mailOptions = {
         from: `"BattleShip.site" <${conf.mailFrom}>`,
         to: body.email,
         subject: "La tua nuova password",
         text: `Ciao ${body.username}!\n\nEcco la tua nuova password: ${password}`
-      };
-      
-      transporter.sendMail(mailOptions, (error, info) => {
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-          return console.error("Errore invio:", error);
+            return console.error("Errore invio email:", error);
         }
         console.log("Email inviata:", info.response);
-      });
-}
+    });
+};
 
+// Rotta per la registrazione
 app.post('/register', async (req, res) => {
     const { username, email } = req.body;
 
     if (!email.endsWith('@itis-molinari.eu')) {
         return res.status(400).json({ success: false, message: 'Email non valida.' });
     }
-    
+
     const password = Math.random().toString(36).slice(-8);
     console.log(`Password generata per ${username}: ${password}`);
     try {
         await database.register(username, email, password);
-        await inviaEmail({ username, email }, password);
+        await inviaEmail({ username, email }, password); // Usa la funzione inviaEmail
         res.json({ success: true });
     } catch (error) {
         console.log(error);
@@ -74,6 +67,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
+// Rotta per il login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await database.login(username, password);
@@ -84,6 +78,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// Gestione degli eventi WebSocket
 io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
@@ -121,7 +116,7 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-            io.to(fromSocketId).emit('invite-accepted', { from: to });
+        io.to(fromSocketId).emit('invite-accepted', { from: to });
     });
 
     socket.on('disconnect', () => {
@@ -131,6 +126,7 @@ io.on('connection', (socket) => {
     });
 });
 
+// Avvio del server
 server.listen(conf.port, () => {
     console.log(`Server running on port ${conf.port}`);
 });

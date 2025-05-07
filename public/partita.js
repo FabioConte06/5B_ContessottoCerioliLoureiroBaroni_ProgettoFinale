@@ -1,4 +1,3 @@
-// Variabili globali
 const userList = document.getElementById('user-list');
 let currentUser = null;
 const cellSize = 50;
@@ -112,51 +111,7 @@ function gestisciClick(canvas, gridNemico) {
     });
 }
 
-const socket = io();
-
-socket.on('update-users', (users) => {
-    console.log('Utenti online:', users);
-    let html = '';
-    users.forEach((username) => {
-            html += `
-                <li>
-                    ${username}
-                    <button onclick="sendInvite('${username}')">Invita</button>
-                </li>
-            `;
-        }
-    );
-    userList.innerHTML = html;
-});
-
-socket.on('receive-invite', ({ from }) => {
-    const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
-    if (accept) {
-        socket.emit('accept-invite', { from, to: currentUser });
-        alert('Invito accettato! Inizia la partita.');
-        showSection(gameSection);
-    }
-});
-
-function sendInvite(to) {
-    socket.emit('send-invite', { from: currentUser, to });
-}
-
-socket.on('invite-error', ({ message }) => {
-    alert(message);
-});
-
-sendChatButton.onclick = () => {
-    const message = chatInput.value.trim();
-        socket.emit('send-chat-message', { user: currentUser, message });
-        chatInput.value = '';
-};
-
-socket.on('receive-chat-message', ({ user, message }) => {
-    chatBox.innerHTML += `<div>${user}: ${message}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-});
-
 gestisciClick(canvas1, grid1);
 gestisciClick(canvas2, grid2);
 aggiorna();
+
