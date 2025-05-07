@@ -4,41 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battaglia Navale</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <h1>Battaglia Navale</h1>
 
   <div id="login-section">
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button id="login-button">Login</button>
+    <p>Non hai un account? <a href="#" id="go-to-register">Registrati</a></p>
   </div>
 
-  <div id="online-users">
-    <h2>Utenti Online</h2>
-    <ul id="user-list"></ul>
-  </div>
-
-  <div id="register-section">
+  <div id="register-section" class="hidden">
     <h2>Registrazione</h2>
     <input type="text" id="register-username" placeholder="Username">
     <input type="email" id="register-email" placeholder="Email (@itis-molinari.eu)">
     <button id="register-button">Registrati</button>
+    <p>Hai un account? <a href="#" id="go-to-login">Login</a></p>
   </div>
 
-  <canvas id="canvas1" width="500" height="500"></canvas>
-  <canvas id="canvas2" width="500" height="500"></canvas>
-
-  <p id="turno">Turno: Giocatore 1</p>
-
-  <div id="form">
-    Tocca al prossimo giocatore
-    <button id="nextTurn">Prossimo turno</button>
+  <div id="invite-section" class="hidden">
+    <h2>Invita un utente</h2>
+    <ul id="user-list"></ul>
   </div>
 
-  <div id="overlay"></div>
+  <div id="game-section" class="hidden">
+    <h2>Battaglia Navale</h2>
+    <canvas id="canvas1" width="500" height="500"></canvas>
+    <canvas id="canvas2" width="500" height="500"></canvas>
+    <p id="turno">Turno: Giocatore 1</p>
+    <div id="form">
+      Tocca al prossimo giocatore
+      <button id="nextTurn">Prossimo turno</button>
+    </div>
+    <div id="overlay"></div>
+  </div>
 
   <script src="script.js"></script>
   <script src="login.js"></script>

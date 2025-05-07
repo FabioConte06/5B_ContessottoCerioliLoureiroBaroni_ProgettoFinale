@@ -1,3 +1,6 @@
+const socket = io();
+const userList = document.getElementById('user-list');
+let currentUser = null;
 const cellSize = 50;
 const rows = 10;
 const cols = 10;
@@ -107,6 +110,46 @@ function gestisciClick(canvas, gridNemico) {
     }
   });
 }
+
+socket.on('update-users', (users) => {
+    const userArray = Object.values(users);
+    let html = '';
+    userArray.forEach((username) => {
+        if (username !== currentUser) {
+            html += `
+                <li>
+                    ${username}
+                    <button onclick="sendInvite('${username}')">Invita</button>
+                </li>
+            `;
+        }
+    });
+    userList.innerHTML = html;
+});
+
+socket.on('receive-invite', ({ from }) => {
+    const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
+    if (accept) {
+        alert('Invito accettato! Inizia la partita.');
+    }
+});
+
+function sendInvite(to) {
+    socket.emit('send-invite', { from: currentUser, to });
+}
+
+loginButton.onclick = () => {
+    const username = loginUsername.value;
+    const password = loginPassword.value;
+    if (username && password) {
+        login(username, password).then(() => {
+            currentUser = username;
+            socket.emit('user-login', username);
+        });
+    } else {
+        alert('Please fill in all fields.');
+    }
+};
 gestisciClick(canvas1, grid1);
 gestisciClick(canvas2, grid2);
 aggiorna();
