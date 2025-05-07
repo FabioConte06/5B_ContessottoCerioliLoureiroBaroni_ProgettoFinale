@@ -88,23 +88,46 @@ io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
     socket.on('user-login', (username) => {
-        onlineUsers.push({ socketId: socket.id, username });
-        io.emit('update-users', onlineUsers.map(user => user.username)); // Invia solo i nomi utente
+        onlineUsers[socket.id] = username;
+        console.log('Utenti online:', onlineUsers);
+        io.emit('update-users', Object.values(onlineUsers));
+    });
+
+    socket.on('send-chat-message', ({ user, message }) => {
+        io.emit('receive-chat-message', { user, message });
     });
 
     socket.on('send-invite', ({ from, to }) => {
-        const recipient = onlineUsers.find(user => user.username === to);
-        if (recipient) {
-            io.to(recipient.socketId).emit('receive-invite', { from });
+        let destinationSocketId = null;
+
+        for (const id in onlineUsers) {
+            if (onlineUsers[id] === to) {
+                destinationSocketId = id;
+                break;
+            }
+        }
+        if (destinationSocketId) {
+            io.to(destinationSocketId).emit('receive-invite', { from });
+        } else {
+            socket.emit('invite-error', { message: 'Utente non disponibile.' });
         }
     });
 
-    socket.on('disconnect', () => {
-        const index = onlineUsers.findIndex(user => user.socketId === socket.id);
-        if (index !== -1) {
-            onlineUsers.splice(index, 1);
+    socket.on('accept-invite', ({ from, to }) => {
+        let fromSocketId = null;
+        for (const id in onlineUsers) {
+            if (onlineUsers[id] === from) {
+                fromSocketId = id;
+                break;
+            }
         }
-        io.emit('update-users', onlineUsers.map(user => user.username)); // Aggiorna la lista
+            io.to(fromSocketId).emit('invite-accepted', { from: to });
+    });
+
+    socket.on('disconnect', () => {
+        delete onlineUsers[socket.id];
+        console.log('Utenti online dopo disconnessione:', onlineUsers);
+        io.emit('update-users', Object.values(onlineUsers));
     });
 });
 

@@ -1,4 +1,4 @@
-const socket = io();
+// Variabili globali
 const userList = document.getElementById('user-list');
 let currentUser = null;
 const cellSize = 50;
@@ -12,110 +12,112 @@ const turnoText = document.getElementById('turno');
 const nextTurn = document.getElementById('nextTurn');
 const form = document.getElementById('form');
 const overlay = document.getElementById('overlay');
+const chatBox = document.getElementById('chat-box');
+const chatInput = document.getElementById('chat-input');
+const sendChatButton = document.getElementById('send-chat-button');
 
 let grid1 = Array.from({ length: rows }, () => Array(cols).fill(0));
-let grid2 = Array.from({ length: rows }, () => Array(cols).fill(0));  
+let grid2 = Array.from({ length: rows }, () => Array(cols).fill(0));
 let turno = 1;
 
+// Funzione per piazzare le navi
 function piazzaNave(grid, lunghezza, quantita) {
-  let piazzate = 0;
-  let tentativi = 0;
-  while (piazzate < quantita && tentativi < 1000) {
-    tentativi++;
-    let dir = Math.floor(Math.random() * 2);
-    let posX = Math.floor(Math.random() * (dir === 0 ? cols - lunghezza + 1 : cols));
-    let posY = Math.floor(Math.random() * (dir === 1 ? rows - lunghezza + 1 : rows));
-    let ok = true;
-    for (let i = 0; i < lunghezza; i++) {
-      let x = dir === 0 ? posX + i : posX;
-      let y = dir === 1 ? posY + i : posY;
-      if (grid[y][x] === 1) {
-        ok = false;
-        break;
-      }
+    let piazzate = 0;
+    let tentativi = 0;
+    while (piazzate < quantita && tentativi < 1000) {
+        tentativi++;
+        const dir = Math.floor(Math.random() * 2);
+        const posX = Math.floor(Math.random() * (dir === 0 ? cols - lunghezza + 1 : cols));
+        const posY = Math.floor(Math.random() * (dir === 1 ? rows - lunghezza + 1 : rows));
+        let ok = true;
+
+        for (let i = 0; i < lunghezza; i++) {
+            const x = dir === 0 ? posX + i : posX;
+            const y = dir === 1 ? posY + i : posY;
+            if (grid[y][x] === 1) {
+                ok = false;
+                break;
+            }
+        }
+
+        if (ok) {
+            for (let i = 0; i < lunghezza; i++) {
+                const x = dir === 0 ? posX + i : posX;
+                const y = dir === 1 ? posY + i : posY;
+                grid[y][x] = 1;
+            }
+            piazzate++;
+        }
     }
-    if (ok) {
-      for (let i = 0; i < lunghezza; i++) {
-        let x = dir === 0 ? posX + i : posX;
-        let y = dir === 1 ? posY + i : posY;
-        grid[y][x] = 1;
-      }
-      piazzate++;
-    }
-  }
-}
-[piazzaNave(grid1, 4, 1), piazzaNave(grid1, 3, 2), piazzaNave(grid1, 2, 3), piazzaNave(grid1, 1, 4)];
-[piazzaNave(grid2, 4, 1), piazzaNave(grid2, 3, 2), piazzaNave(grid2, 2, 3), piazzaNave(grid2, 1, 4)];
-function drawGrid(ctx, grid, hideShips) {
-  ctx.clearRect(0, 0, canvas1.width, canvas1.height);
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      ctx.strokeStyle = 'black';
-      ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
-      if (grid[i][j] === 2) {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-      } else if (grid[i][j] === 3) {
-        ctx.fillStyle = 'lightblue';
-        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-      } else if (grid[i][j] === 1 && !hideShips) {
-        ctx.fillStyle = 'gray';
-        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-      }
-    }
-  }
 }
 
+// Piazzamento delle navi
+[piazzaNave(grid1, 4, 1), piazzaNave(grid1, 3, 2), piazzaNave(grid1, 2, 3), piazzaNave(grid1, 1, 4)];
+[piazzaNave(grid2, 4, 1), piazzaNave(grid2, 3, 2), piazzaNave(grid2, 2, 3), piazzaNave(grid2, 1, 4)];
+
+// Disegna la griglia
+function drawGrid(ctx, grid, hideShips) {
+    ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            if (grid[i][j] === 2) {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            } else if (grid[i][j] === 3) {
+                ctx.fillStyle = 'lightblue';
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            } else if (grid[i][j] === 1 && !hideShips) {
+                ctx.fillStyle = 'gray';
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+}
+
+// Aggiorna la griglia
 function aggiorna() {
-  drawGrid(ctx1, grid1, turno !== 1); 
-  drawGrid(ctx2, grid2, turno !== 2);
-  turnoText.innerText = `Turno: Giocatore ${turno}`;
+    drawGrid(ctx1, grid1, turno !== 1);
+    drawGrid(ctx2, grid2, turno !== 2);
+    turnoText.innerText = `Turno: Giocatore ${turno}`;
 }
 
 nextTurn.onclick = function() {
-    aggiorna();
-    form.style.display = "none"
-    overlay.style.display = "none"
+  aggiorna();
+  form.style.display = "none"
+  overlay.style.display = "none"
 }
 
+// Gestione del click sulla griglia
 function gestisciClick(canvas, gridNemico) {
-  canvas.addEventListener('click', function (event) {
-    if ((turno === 1 && canvas === canvas2) || (turno === 2 && canvas === canvas1)) {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const j = Math.floor(x / cellSize);
-      const i = Math.floor(y / cellSize);
-      if (i >= 0 && i < rows && j >= 0 && j < cols) {
-        if (gridNemico[i][j] === 1) {
-          gridNemico[i][j] = 2;
-          aggiorna();
-        } 
-        
-        else if (gridNemico[i][j] === 0) {
-          gridNemico[i][j] = 3;
-          
-          if (turno == 1) {
-            turno = 2
-          }
-          else {
-            turno = 1
-          }
+    canvas.addEventListener('click', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const j = Math.floor(x / cellSize);
+        const i = Math.floor(y / cellSize);
 
-          form.style.display = "inline"
-          overlay.style.display = "inline"
+        if (i >= 0 && i < rows && j >= 0 && j < cols) {
+            if (gridNemico[i][j] === 1) {
+                gridNemico[i][j] = 2;
+                aggiorna();
+            } else if (gridNemico[i][j] === 0) {
+                gridNemico[i][j] = 3;
+                turno = turno === 1 ? 2 : 1;
+                form.style.display = "inline";
+                overlay.style.display = "inline";
+            }
         }
-        
-      }
-    }
-  });
+    });
 }
+
+const socket = io();
 
 socket.on('update-users', (users) => {
-    const userArray = Object.values(users);
+    console.log('Utenti online:', users);
     let html = '';
-    userArray.forEach((username) => {
-        if (username !== currentUser) {
+    users.forEach((username) => {
             html += `
                 <li>
                     ${username}
@@ -123,14 +125,16 @@ socket.on('update-users', (users) => {
                 </li>
             `;
         }
-    });
+    );
     userList.innerHTML = html;
 });
 
 socket.on('receive-invite', ({ from }) => {
     const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
     if (accept) {
+        socket.emit('accept-invite', { from, to: currentUser });
         alert('Invito accettato! Inizia la partita.');
+        showSection(gameSection);
     }
 });
 
@@ -138,18 +142,21 @@ function sendInvite(to) {
     socket.emit('send-invite', { from: currentUser, to });
 }
 
-loginButton.onclick = () => {
-    const username = loginUsername.value;
-    const password = loginPassword.value;
-    if (username && password) {
-        login(username, password).then(() => {
-            currentUser = username;
-            socket.emit('user-login', username);
-        });
-    } else {
-        alert('Please fill in all fields.');
-    }
+socket.on('invite-error', ({ message }) => {
+    alert(message);
+});
+
+sendChatButton.onclick = () => {
+    const message = chatInput.value.trim();
+        socket.emit('send-chat-message', { user: currentUser, message });
+        chatInput.value = '';
 };
+
+socket.on('receive-chat-message', ({ user, message }) => {
+    chatBox.innerHTML += `<div>${user}: ${message}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
+
 gestisciClick(canvas1, grid1);
 gestisciClick(canvas2, grid2);
 aggiorna();

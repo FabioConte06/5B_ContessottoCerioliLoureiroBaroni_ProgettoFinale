@@ -27,6 +27,13 @@
   <div id="invite-section" class="hidden">
     <h2>Invita un utente</h2>
     <ul id="user-list"></ul>
+
+    <h2>Chat Globale</h2>
+    <div id="chat-box" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px;">
+    </div>
+    <input type="text" id="chat-input" placeholder="Scrivi un messaggio..." style="width: 80%;">
+    <button id="send-chat-button">Invia</button>
+    </div>
   </div>
 
   <div id="game-section" class="hidden">
@@ -41,6 +48,7 @@
     <div id="overlay"></div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
   <script src="login.js"></script>
 

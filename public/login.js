@@ -28,7 +28,7 @@ goToLogin.onclick = () => {
 };
 
 const login = function(username, password) {
-    fetch('/login', {
+    return fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -77,12 +77,20 @@ registerButton.onclick = () => {
     }
 };
 
-loginButton.onclick = () => {
+
+loginButton.onclick = async () => {
     const username = loginUsername.value;
     const password = loginPassword.value;
     if (username && password) {
-        login(username, password);
+        try {
+            await login(username, password);
+            currentUser = username;
+            console.log('Utente loggato:', currentUser);
+            socket.emit('user-login', username);
+        } catch (error) {
+            console.error('Errore durante il login:', error);
+        }
     } else {
-        alert("Riempi tutti i campi.");
+        alert('Riempi tutti i campi.');
     }
 };
