@@ -14,28 +14,48 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.Email_User,
-        pass: process.env.Email_Password
-    }
-});
+async function create_trasporter(){
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: conf.mailFrom,
+            pass: conf.mailSecret
+        }
+    });
+}
+
+const inviaEmail = async (body) =>{
+    const transporter = await create_trasporter()
+    const mailOptions = {
+        from: '"Babapapr.it" <poker@babapapr.it>',
+        to: body.email,
+        subject: "La tua nuova password",
+        text: "Ciao ${body.username}!\n\nEcco la tua nuova password: ${body.password}"
+      };
+      
+      // Invio
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          return console.error("Errore invio:", error);
+        }
+        console.log("Email inviata:", info.response);
+      });
+}
 
 app.post('/register', async (req, res) => {
     const { username, email } = req.body;
+    console.log(body)
+
     if (!email.endsWith('@itis-molinari.eu')) {
         return res.status(400).json({ success: false, message: 'Email non valida.' });
     }
+    
     const password = Math.random().toString(36).slice(-8);
     try {
         await database.register(username, email, password);
-        await transporter.sendMail({
-            from: process.env.Email_User,
-            to: process.env.Email_User,
-            subject: 'Registrazione completata',
-            text: `La tua password è: ${password}`
-        });
+        inviaEmail(body);
         res.json({ success: true });
     } catch (error) {
         console.log(error);

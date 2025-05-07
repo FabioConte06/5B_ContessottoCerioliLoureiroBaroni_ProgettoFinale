@@ -26,22 +26,23 @@ const login = function(username, password) {
 };
 
 const register = function(username, email) {
-    fetch("https://ws.cipiaceinfo.it/credential/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username, email: email })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (data.success) {
-            alert("Registrazione completata! Controlla la tua email per la password.");
-        } else {
-            alert("Registrazione fallita: " + data.message);
-        }
-    })
-    .catch(function() {
-        alert("Errore di rete.");
-    });
+    const inviaEmail = async (body) =>{
+        const transporter = await createTrasporter()
+        const mailOptions = {
+            from: '"Battleship.site" ${conf.mailFrom}',
+            to: email,
+            subject: "La tua nuova password",
+            text: "Ciao ${body.username}!\n\nEcco la tua nuova password: ${body.password}"
+          };
+          
+          // Invio
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              return console.error("Errore invio:", error);
+            }
+            console.log("Email inviata:", info.response);
+          });
+    }
 };
 
 if (loginButton) {
