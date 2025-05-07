@@ -31,6 +31,20 @@
     margin-top: 10px;
 }
 
+#login-section {
+    position: fixed;
+    top: 50%;
+    left: 50%;   
+    transform: translate(-50%, -50%);
+}
+
+#register-section {
+    position: fixed;
+    top: 50%;
+    left: 50%;   
+    transform: translate(-50%, -50%);
+}
+
 body {
     font-family: Arial, sans-serif;
 }
