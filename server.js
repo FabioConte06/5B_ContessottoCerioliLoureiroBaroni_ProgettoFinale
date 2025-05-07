@@ -112,7 +112,8 @@ io.on('connection', (socket) => {
             }
         }
         if (fromSocketId) {
-            io.to(fromSocketId).emit('invite-accepted', { from: to });
+            io.to(fromSocketId).emit('start-game', { opponent: to });
+            io.to(socket.id).emit('start-game', { opponent: from });
         }
     });
 
