@@ -5,7 +5,8 @@ const loginButton = document.getElementById("login-button");
 const goToLogin = document.getElementById("go-to-login");
 const loginUsername = document.getElementById("username");
 const loginPassword = document.getElementById("password");
-socket.io = io();
+const registerSection = document.getElementById("register-section");
+const socket = io();
 
 function showSection(section) {
     loginSection.classList.add("hidden");

@@ -1,4 +1,3 @@
-const userList = document.getElementById('user-list');
 let currentUser = null;
 const cellSize = 50;
 const rows = 10;
@@ -11,9 +10,6 @@ const turnoText = document.getElementById('turno');
 const nextTurn = document.getElementById('nextTurn');
 const form = document.getElementById('form');
 const overlay = document.getElementById('overlay');
-const chatBox = document.getElementById('chat-box');
-const chatInput = document.getElementById('chat-input');
-const sendChatButton = document.getElementById('send-chat-button');
 
 let grid1 = Array.from({ length: rows }, () => Array(cols).fill(0));
 let grid2 = Array.from({ length: rows }, () => Array(cols).fill(0));

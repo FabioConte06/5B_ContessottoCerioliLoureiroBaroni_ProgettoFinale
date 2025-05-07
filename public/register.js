@@ -3,6 +3,7 @@ const inviteSection = document.getElementById("invite-section");
 const gameSection = document.getElementById("game-section");
 const registerButton = document.getElementById("register-button");
 const goToRegister = document.getElementById("go-to-register");
+const loginSection = document.getElementById("login-section");
 const registerUsername = document.getElementById("register-username");
 const registerEmail = document.getElementById("register-email");
 

@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
-const nodemailer = require('nodemailer'); // Importa nodemailer per l'invio delle email
+const nodemailer = require('nodemailer');
 const database = require('./database');
 
 const conf = JSON.parse(fs.readFileSync('./conf.json'));
@@ -16,7 +16,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const onlineUsers = {};
 
-// Funzione per creare il trasportatore di nodemailer
 async function createTransporter() {
     return nodemailer.createTransport({
         host: "smtp.gmail.com",
@@ -29,7 +28,6 @@ async function createTransporter() {
     });
 }
 
-// Funzione per inviare email
 const inviaEmail = async (body, password) => {
     const transporter = await createTransporter();
     const mailOptions = {
@@ -47,7 +45,6 @@ const inviaEmail = async (body, password) => {
     });
 };
 
-// Rotta per la registrazione
 app.post('/register', async (req, res) => {
     const { username, email } = req.body;
 
@@ -59,7 +56,7 @@ app.post('/register', async (req, res) => {
     console.log(`Password generata per ${username}: ${password}`);
     try {
         await database.register(username, email, password);
-        await inviaEmail({ username, email }, password); // Usa la funzione inviaEmail
+        await inviaEmail({ username, email }, password);
         res.json({ success: true });
     } catch (error) {
         console.log(error);
@@ -67,7 +64,6 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// Rotta per il login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await database.login(username, password);
@@ -78,7 +74,6 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Gestione degli eventi WebSocket
 io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
@@ -116,7 +111,9 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-        io.to(fromSocketId).emit('invite-accepted', { from: to });
+        if (fromSocketId) {
+            io.to(fromSocketId).emit('invite-accepted', { from: to });
+        }
     });
 
     socket.on('disconnect', () => {
@@ -126,7 +123,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Avvio del server
 server.listen(conf.port, () => {
     console.log(`Server running on port ${conf.port}`);
 });
