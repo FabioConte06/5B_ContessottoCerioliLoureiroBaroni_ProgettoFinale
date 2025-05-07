@@ -14,8 +14,19 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const onlineUsers = {};
+
+(async () => {
+    try {
+        await database.createTable();
+        console.log("Tabella creata o già esistente.");
+    } catch (error) {
+        console.error("Errore durante la creazione della tabella:", error);
+    }
+})();
+
 async function create_trasporter(){
-    const transporter = nodemailer.createTransport({
+    return transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
         secure: false,
@@ -26,16 +37,16 @@ async function create_trasporter(){
     });
 }
 
-const inviaEmail = async (body) =>{
+const inviaEmail = async (body, password) =>{
+    console.log(password);
     const transporter = await create_trasporter()
     const mailOptions = {
-        from: '"Babapapr.it" <poker@babapapr.it>',
+        from: `"BattleShip.site" <${conf.mailFrom}>`,
         to: body.email,
         subject: "La tua nuova password",
-        text: "Ciao ${body.username}!\n\nEcco la tua nuova password: ${body.password}"
+        text: `Ciao ${body.username}!\n\nEcco la tua nuova password: ${password}`
       };
       
-      // Invio
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           return console.error("Errore invio:", error);
@@ -46,16 +57,16 @@ const inviaEmail = async (body) =>{
 
 app.post('/register', async (req, res) => {
     const { username, email } = req.body;
-    console.log(body)
 
     if (!email.endsWith('@itis-molinari.eu')) {
         return res.status(400).json({ success: false, message: 'Email non valida.' });
     }
     
     const password = Math.random().toString(36).slice(-8);
+    console.log(`Password generata per ${username}: ${password}`);
     try {
         await database.register(username, email, password);
-        inviaEmail(body);
+        await inviaEmail({ username, email }, password);
         res.json({ success: true });
     } catch (error) {
         console.log(error);
@@ -75,6 +86,26 @@ app.post('/login', async (req, res) => {
 
 io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
+
+    socket.on('user-login', (username) => {
+        onlineUsers.push({ socketId: socket.id, username });
+        io.emit('update-users', onlineUsers.map(user => user.username)); // Invia solo i nomi utente
+    });
+
+    socket.on('send-invite', ({ from, to }) => {
+        const recipient = onlineUsers.find(user => user.username === to);
+        if (recipient) {
+            io.to(recipient.socketId).emit('receive-invite', { from });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        const index = onlineUsers.findIndex(user => user.socketId === socket.id);
+        if (index !== -1) {
+            onlineUsers.splice(index, 1);
+        }
+        io.emit('update-users', onlineUsers.map(user => user.username)); // Aggiorna la lista
+    });
 });
 
 server.listen(conf.port, () => {

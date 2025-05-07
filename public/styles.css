@@ -36,7 +36,7 @@ body {
 }
 
 .hidden {
-    display: none !important;
+    display: none;
 }
 
 h1, h2 {
