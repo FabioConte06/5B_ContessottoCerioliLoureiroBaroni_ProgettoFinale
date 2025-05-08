@@ -41,6 +41,7 @@ const inviti = () => {
         sendChatMessage: () => {
             const sendChatButton = document.getElementById('send-chat-button');
             const chatInput = document.getElementById('chat-input');
+
             sendChatButton.onclick = () => {
                 const message = chatInput.value.trim();
                 if (message) {
@@ -48,6 +49,19 @@ const inviti = () => {
                     chatInput.value = '';
                 } else {
                     alert('Il messaggio non può essere vuoto.');
+                }
+            };
+
+            chatInput.onkeydown = (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const message = chatInput.value.trim();
+                    if (message) {
+                        socket.emit('send-chat-message', { user: currentUser, message });
+                        chatInput.value = '';
+                    } else {
+                        alert('Il messaggio non può essere vuoto.');
+                    }
                 }
             };
         },
@@ -69,12 +83,11 @@ const inviti = () => {
                         }
                     }).join('');
 
-                    // Aggiungi gli event listener ai pulsanti "Invita"
                     const inviteButtons = document.querySelectorAll('.invite-button');
                     inviteButtons.forEach(button => {
                         button.onclick = () => {
                             const to = button.getAttribute('data-user');
-                            invite.sendInvite(to); // Usa la funzione sendInvite
+                            invite.sendInvite(to);
                         };
                     });
                 }
@@ -121,8 +134,8 @@ const login = () => {
                     currentUser = username;
                     alert('Login effettuato con successo!');
                     const inviteSection = document.getElementById('invite-section');
-                    const loginSection = document.getElementById('login-section');
-                    loginSection.classList.add('hidden');
+                    const loginForm = document.getElementById('login-form');
+                    loginForm.classList.add('hidden');
                     inviteSection.classList.remove('hidden');
                     socket.emit('user-login', username);
                 } else {
@@ -134,7 +147,20 @@ const login = () => {
         },
         setup: () => {
             const loginButton = document.getElementById('login-button');
-            const goRegister = document.getElementById('go-to-register')
+            const goRegister = document.getElementById('go-to-register');
+            const loginForm = document.getElementById('login-form');
+
+            loginForm.onsubmit = (event) => {
+                event.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                if (username && password) {
+                    userLogin.login(username, password);
+                } else {
+                    alert('Riempi tutti i campi.');
+                }
+            };
+
             loginButton.onclick = () => {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
@@ -144,11 +170,12 @@ const login = () => {
                     alert('Riempi tutti i campi.');
                 }
             };
+
             goRegister.onclick = () => {
-                const loginSection = document.getElementById('login-section');
-                const registerSection = document.getElementById('register-section');
-                loginSection.classList.add('hidden');
-                registerSection.classList.remove('hidden');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
             }
         }
     };
@@ -166,10 +193,10 @@ const register = () => {
                 const data = await response.json();
                 if (data.success) {
                     alert('Registrazione completata! Controlla la tua email.');
-                    const loginSection = document.getElementById('login-section');
-                    const registerSection = document.getElementById('register-section');
-                    registerSection.classList.add('hidden');
-                    loginSection.classList.remove('hidden');
+                    const loginForm = document.getElementById('login-form');
+                    const registerForm = document.getElementById('register-form');
+                    registerForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
                 } else {
                     alert(data.message || 'Errore nella registrazione.');
                 }
@@ -179,6 +206,19 @@ const register = () => {
         },
         setup: () => {
             const registerButton = document.getElementById('register-button');
+            const registerForm = document.getElementById('register-form');
+
+            registerForm.onsubmit = (event) => {
+                event.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                if (username && email) {
+                    userRegister.register(username, email);
+                } else {
+                    alert('Riempi tutti i campi.');
+                }
+            };
+
             registerButton.onclick = () => {
                 const username = document.getElementById('register-username').value;
                 const email = document.getElementById('register-email').value;
@@ -188,12 +228,13 @@ const register = () => {
                     alert('Riempi tutti i campi.');
                 }
             };
+
             const backLogin = document.getElementById('back-login');
             backLogin.onclick = () => {
-                const loginSection = document.getElementById('login-section');
-                const registerSection = document.getElementById('register-section');
-                registerSection.classList.add('hidden');
-                loginSection.classList.remove('hidden');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
             }
         }
     };
