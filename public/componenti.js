@@ -111,10 +111,6 @@ const inviti = () => {
 
 const login = () => {
     return {
-        showSection: (section) => {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
-            section.classList.remove('hidden');
-        },
         login: async (username, password) => {
             try {
                 const response = await fetch('/login', {
@@ -140,6 +136,7 @@ const login = () => {
         },
         setup: () => {
             const loginButton = document.getElementById('login-button');
+            const goRegister = document.getElementById('go-to-register')
             loginButton.onclick = () => {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
@@ -149,16 +146,18 @@ const login = () => {
                     alert('Riempi tutti i campi.');
                 }
             };
+            goRegister.onclick = () => {
+                const loginSection = document.getElementById('login-section');
+                const registerSection = document.getElementById('register-section');
+                loginSection.classList.add('hidden');
+                registerSection.classList.remove('hidden');
+            }
         }
     };
 };
 
 const register = () => {
     return {
-        showSection: (section) => {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
-            section.classList.remove('hidden');
-        },
         register: async (username, email) => {
             try {
                 const response = await fetch('/register', {
@@ -169,7 +168,10 @@ const register = () => {
                 const data = await response.json();
                 if (data.success) {
                     alert('Registrazione completata! Controlla la tua email.');
-                    userRegister.showSection(document.getElementById('login-section'));
+                    const loginSection = document.getElementById('login-section');
+                    const registerSection = document.getElementById('register-section');
+                    registerSection.classList.add('hidden');
+                    loginSection.classList.remove('hidden');
                 } else {
                     alert(data.message || 'Errore nella registrazione.');
                 }
@@ -188,6 +190,13 @@ const register = () => {
                     alert('Riempi tutti i campi.');
                 }
             };
+            const backLogin = document.getElementById('back-login');
+            backLogin.onclick = () => {
+                const loginSection = document.getElementById('login-section');
+                const registerSection = document.getElementById('register-section');
+                registerSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+            }
         }
     };
 };
