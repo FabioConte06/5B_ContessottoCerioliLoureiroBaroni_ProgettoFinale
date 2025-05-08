@@ -24,7 +24,14 @@ const websocket = () => {
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
                     socket.emit('accept-invite', { from, to: currentUser });
-                    alert('Invito accettato! Inizia la partita.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Invito accettato! Inizia la partita.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             });
         },
@@ -48,7 +55,14 @@ const inviti = () => {
                     socket.emit('send-chat-message', { user: currentUser, message });
                     chatInput.value = '';
                 } else {
-                    alert('Il messaggio non può essere vuoto.');
+                    const notifica = document.getElementById('notifica');
+                        notifica.textContent = 'Il messaggio non può essere vuoto.';
+                        notifica.classList.remove('hidden');
+                        notifica.classList.add('show');
+                        setTimeout(() => {
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
+                        }, 3000);
                 }
             };
 
@@ -60,7 +74,14 @@ const inviti = () => {
                         socket.emit('send-chat-message', { user: currentUser, message });
                         chatInput.value = '';
                     } else {
-                        alert('Il messaggio non può essere vuoto.');
+                        const notifica = document.getElementById('notifica');
+                        notifica.textContent = 'Il messaggio non può essere vuoto.';
+                        notifica.classList.remove('hidden');
+                        notifica.classList.add('show');
+                        setTimeout(() => {
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
+                        }, 3000);
                     }
                 }
             };
@@ -95,10 +116,6 @@ const inviti = () => {
         },
         sendInvite: (to) => {
             console.log(currentUser, to);
-            if (!currentUser) {
-                alert('Devi effettuare il login per inviare un invito.');
-                return;
-            }
             socket.emit('send-invite', { from: currentUser, to });
         },
         receiveInvite: () => {
@@ -113,7 +130,7 @@ const inviti = () => {
         },
         inviteError: () => {
             socket.on('invite-error', ({ message }) => {
-                alert(message);
+                `La partita contro ${opponent} sta per iniziare!`
             });
         },
         startGame: () => {}
@@ -132,7 +149,14 @@ const login = () => {
                 const data = await response.json();
                 if (data.success) {
                     currentUser = username;
-                    alert('Login effettuato con successo!');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Login effettuato con successo!';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                     const inviteSection = document.getElementById('invite-section');
                     const loginForm = document.getElementById('login-form');
                     loginForm.classList.add('hidden');
@@ -157,7 +181,14 @@ const login = () => {
                 if (username && password) {
                     userLogin.login(username, password);
                 } else {
-                    alert('Riempi tutti i campi.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Riempi tutti i campi.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             };
 
@@ -167,7 +198,14 @@ const login = () => {
                 if (username && password) {
                     userLogin.login(username, password);
                 } else {
-                    alert('Riempi tutti i campi.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Riempi tutti i campi.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             };
 
@@ -192,7 +230,14 @@ const register = () => {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert('Registrazione completata! Controlla la tua email.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Registrazione completata, controlla la tua email';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                     const loginForm = document.getElementById('login-form');
                     const registerForm = document.getElementById('register-form');
                     registerForm.classList.add('hidden');
@@ -215,7 +260,14 @@ const register = () => {
                 if (username && email) {
                     userRegister.register(username, email);
                 } else {
-                    alert('Riempi tutti i campi.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Riempi tutti i campi.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             };
 
@@ -225,7 +277,14 @@ const register = () => {
                 if (username && email) {
                     userRegister.register(username, email);
                 } else {
-                    alert('Riempi tutti i campi.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = 'Riempi tutti i campi.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             };
 
@@ -292,7 +351,14 @@ game.setup();
 export { websocket, inviti, login, register, partita };
 
 socket.on('start-game', ({ opponent }) => {
-    alert(`La partita contro ${opponent} sta per iniziare!`);
+    const notifica = document.getElementById('notifica');
+    notifica.textContent = `La partita contro ${opponent} sta per iniziare!`;
+    notifica.classList.remove('hidden');
+    notifica.classList.add('show');
+    setTimeout(() => {
+    notifica.classList.remove('show');
+    setTimeout(() => notifica.classList.add('hidden'), 400);
+    }, 3000);
     const inviteSection = document.getElementById('invite-section');
     const gameSection = document.getElementById('game-section');
     inviteSection.classList.add('hidden');

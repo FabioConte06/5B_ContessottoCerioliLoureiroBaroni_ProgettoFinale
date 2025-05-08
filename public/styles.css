@@ -164,4 +164,27 @@
   a:hover {
     text-decoration: underline;
   }
+
+  #notificat {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #222;
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    font-family: sans-serif;
+  }
+  #notifica.show {
+    opacity: 1;
+  }
+  .hidden {
+    display: none;
+  }
+  
   
