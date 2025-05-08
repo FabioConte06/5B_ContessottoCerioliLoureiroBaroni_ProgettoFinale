@@ -20,6 +20,7 @@ const websocket = () => {
         },
         receiveInvite: () => {
             socket.on('receive-invite', ({ from }) => {
+                console.log("socket invito")
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
                     socket.emit('accept-invite', { from, to: currentUser });
@@ -89,8 +90,10 @@ const inviti = () => {
         },
         receiveInvite: () => {
             socket.on('receive-invite', ({ from }) => {
+                console.log("compnenti:", from)
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
+                    console.log("accetta:", from)
                     socket.emit('accept-invite', { from, to: currentUser });
                 }
             });
@@ -100,12 +103,7 @@ const inviti = () => {
                 alert(message);
             });
         },
-        startGame: () => {
-            socket.on('start-game', ({ opponent }) => {
-                alert(`La partita contro ${opponent} sta per iniziare!`);
-                showSection(gameSection);
-            });
-        }
+        startGame: () => {}
     };
 };
 
@@ -251,3 +249,11 @@ const game = partita();
 game.setup();
 
 export { websocket, inviti, login, register, partita };
+
+socket.on('start-game', ({ opponent }) => {
+    alert(`La partita contro ${opponent} sta per iniziare!`);
+    const inviteSection = document.getElementById('invite-section');
+    const gameSection = document.getElementById('game-section');
+    inviteSection.classList.add('hidden');
+    gameSection.classList.remove('hidden');
+});

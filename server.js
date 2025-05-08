@@ -104,6 +104,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('accept-invite', ({ from, to }) => {
+        console.log("server")
         let fromSocketId = null;
         for (const id in onlineUsers) {
             if (onlineUsers[id] === from) {
@@ -111,6 +112,8 @@ io.on('connection', (socket) => {
                 break;
             }
         }
+        console.log(from)
+        console.log(to)
         if (fromSocketId) {
             io.to(fromSocketId).emit('start-game', { opponent: to });
             io.to(socket.id).emit('start-game', { opponent: from });
