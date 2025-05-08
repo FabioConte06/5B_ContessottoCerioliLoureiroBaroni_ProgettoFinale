@@ -43,16 +43,18 @@ const inviti = () => {
             sendChatButton.onclick = () => {
                 const message = chatInput.value.trim();
                 if (message) {
-                    if (!currentUser) {
-                        alert('Devi effettuare il login per inviare messaggi.');
-                        return;
-                    }
                     socket.emit('send-chat-message', { user: currentUser, message });
                     chatInput.value = '';
                 } else {
                     alert('Il messaggio non può essere vuoto.');
                 }
             };
+        },
+        receiveChatMessage: () => {
+            const chatBox = document.getElementById('chat-box');
+            socket.on('receive-chat-message', ({ user, message }) => {
+                chatBox.innerHTML+=`<div>${user}: ${message}</div>`
+            }) 
         },
         updateUsers: () => {
             const userList = document.getElementById('user-list');
@@ -78,6 +80,7 @@ const inviti = () => {
             });
         },
         sendInvite: (to) => {
+            console.log(currentUser, to);
             if (!currentUser) {
                 alert('Devi effettuare il login per inviare un invito.');
                 return;
@@ -231,7 +234,9 @@ userRegister.setup();
 
 const invite = inviti();
 invite.updateUsers();
+invite.sendChatMessage();
 invite.receiveChatMessage();
+invite.receiveInvite();
 
 const game = partita();
 game.setup();
