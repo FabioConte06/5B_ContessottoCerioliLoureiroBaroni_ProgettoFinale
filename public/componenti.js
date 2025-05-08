@@ -1,0 +1,239 @@
+const socket = io();
+let currentUser = null;
+
+const websocket = () => {
+    return {
+        connect: () => {
+            socket.on('connect', () => {
+                console.log(`Connesso al server con ID: ${socket.id}`);
+            });
+        },
+        updateUsers: () => {
+            socket.on('update-users', (users) => {
+                console.log('Utenti online:', users);
+            });
+        },
+        receiveChatMessage: () => {
+            socket.on('receive-chat-message', ({ user, message }) => {
+                console.log(`${user}: ${message}`);
+            });
+        },
+        receiveInvite: () => {
+            socket.on('receive-invite', ({ from }) => {
+                const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
+                if (accept) {
+                    socket.emit('accept-invite', { from, to: currentUser });
+                    alert('Invito accettato! Inizia la partita.');
+                }
+            });
+        },
+        inviteError: () => {
+            socket.on('invite-error', ({ message }) => {
+                alert(message);
+            });
+        }
+    };
+};
+
+const inviti = () => {
+    return {
+        sendChatMessage: () => {
+            const sendChatButton = document.getElementById('send-chat-button');
+            const chatInput = document.getElementById('chat-input');
+            sendChatButton.onclick = () => {
+                const message = chatInput.value.trim();
+                if (message) {
+                    if (!currentUser) {
+                        alert('Devi effettuare il login per inviare messaggi.');
+                        return;
+                    }
+                    socket.emit('send-chat-message', { user: currentUser, message });
+                    chatInput.value = '';
+                } else {
+                    alert('Il messaggio non può essere vuoto.');
+                }
+            };
+        },
+        updateUsers: () => {
+            const userList = document.getElementById('user-list');
+            socket.on('update-users', (users) => {
+                if (userList) {
+                    userList.innerHTML = users.map(user => {
+                        if (user === currentUser) {
+                            return `<li>${user} (Tu)</li>`;
+                        } else {
+                            return `<li>${user} <button class="invite-button" data-user="${user}">Invita</button></li>`;
+                        }
+                    }).join('');
+
+                    // Aggiungi gli event listener ai pulsanti "Invita"
+                    const inviteButtons = document.querySelectorAll('.invite-button');
+                    inviteButtons.forEach(button => {
+                        button.onclick = () => {
+                            const to = button.getAttribute('data-user');
+                            invite.sendInvite(to); // Usa la funzione sendInvite
+                        };
+                    });
+                }
+            });
+        },
+        sendInvite: (to) => {
+            if (!currentUser) {
+                alert('Devi effettuare il login per inviare un invito.');
+                return;
+            }
+            socket.emit('send-invite', { from: currentUser, to });
+        },
+        receiveInvite: () => {
+            socket.on('receive-invite', ({ from }) => {
+                const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
+                if (accept) {
+                    socket.emit('accept-invite', { from, to: currentUser });
+                }
+            });
+        },
+        inviteError: () => {
+            socket.on('invite-error', ({ message }) => {
+                alert(message);
+            });
+        },
+        startGame: () => {
+            socket.on('start-game', ({ opponent }) => {
+                alert(`La partita contro ${opponent} sta per iniziare!`);
+                showSection(gameSection);
+            });
+        }
+    };
+};
+
+const login = () => {
+    return {
+        showSection: (section) => {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+            section.classList.remove('hidden');
+        },
+        login: async (username, password) => {
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    currentUser = username;
+                    alert('Login effettuato con successo!');
+                    const inviteSection = document.getElementById('invite-section');
+                    const loginSection = document.getElementById('login-section');
+                    loginSection.classList.add('hidden');
+                    inviteSection.classList.remove('hidden');
+                    socket.emit('user-login', username);
+                } else {
+                    alert(data.message || 'Login fallito.');
+                }
+            } catch (error) {
+                alert('Errore di rete.');
+            }
+        },
+        setup: () => {
+            const loginButton = document.getElementById('login-button');
+            loginButton.onclick = () => {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                if (username && password) {
+                    userLogin.login(username, password);
+                } else {
+                    alert('Riempi tutti i campi.');
+                }
+            };
+        }
+    };
+};
+
+const register = () => {
+    return {
+        showSection: (section) => {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+            section.classList.remove('hidden');
+        },
+        register: async (username, email) => {
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Registrazione completata! Controlla la tua email.');
+                    userRegister.showSection(document.getElementById('login-section'));
+                } else {
+                    alert(data.message || 'Errore nella registrazione.');
+                }
+            } catch (error) {
+                alert('Errore di rete.');
+            }
+        },
+        setup: () => {
+            const registerButton = document.getElementById('register-button');
+            registerButton.onclick = () => {
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                if (username && email) {
+                    userRegister.register(username, email);
+                } else {
+                    alert('Riempi tutti i campi.');
+                }
+            };
+        }
+    };
+};
+
+const partita = () => {
+    return {
+        setup: () => {
+            const canvas1 = document.getElementById('canvas1');
+            const canvas2 = document.getElementById('canvas2');
+            const ctx1 = canvas1.getContext('2d');
+            const ctx2 = canvas2.getContext('2d');
+            const turnoText = document.getElementById('turno');
+            const nextTurn = document.getElementById('nextTurn');
+            const form = document.getElementById('form');
+            const overlay = document.getElementById('overlay');
+
+            let grid1 = Array.from({ length: 10 }, () => Array(10).fill(0));
+            let grid2 = Array.from({ length: 10 }, () => Array(10).fill(0));
+            let turno = 1;
+
+            const aggiorna = () => {
+                // Aggiorna la griglia
+            };
+
+            nextTurn.onclick = () => {
+                aggiorna();
+                form.style.display = "none";
+                overlay.style.display = "none";
+            };
+
+            // Altre funzioni per gestire la partita
+        }
+    };
+};
+
+const ws = websocket();
+ws.connect();
+
+const userLogin = login();
+userLogin.setup();
+
+const userRegister = register();
+userRegister.setup();
+
+const invite = inviti();
+invite.updateUsers();
+invite.receiveChatMessage();
+
+const game = partita();
+game.setup();
+
+export { websocket, inviti, login, register, partita };
