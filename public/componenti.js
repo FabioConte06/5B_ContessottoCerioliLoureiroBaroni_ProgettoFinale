@@ -93,24 +93,38 @@ const inviti = () => {
             }) 
         },
         updateUsers: () => {
-            const userList = document.getElementById('user-list');
-            socket.on('update-users', (users) => {
-                if (userList) {
-                    userList.innerHTML = users.map(user => {
-                        if (user === currentUser) {
-                            return `<li>${user} (Tu)</li>`;
-                        } else {
-                            return `<li>${user} <button class="invite-button" data-user="${user}">Invita</button></li>`;
-                        }
-                    }).join('');
+    const userList = document.getElementById('user-list');
+    socket.on('update-users', (users) => {
+        if (userList) {
+            socket.emit('active-games', {}, (activeGames) => {
+                userList.innerHTML = users.map(user => {
+                    let inGame = false;
 
-                    const inviteButtons = document.querySelectorAll('.invite-button');
-                    inviteButtons.forEach(button => {
-                        button.onclick = () => {
-                            const to = button.getAttribute('data-user');
-                            invite.sendInvite(to);
-                        };
+                    for (let i = 0; i < activeGames.length; i++) {
+                        const game = activeGames[i];
+                        if (game.players.includes(user) && game.players.includes(currentUser)) {
+                            inGame = true;
+                            break;
+                        }
+                    }
+
+                    if (user === currentUser) {
+                        return `<li>${user} (Tu)</li>`;
+                    } else if (inGame) {
+                        return `<li>${user} (In partita)</li>`;
+                    } else {
+                        return `<li>${user} <button class="invite-button" data-user="${user}">Invita</button></li>`;
+                    }
+                }).join('');
+
+                const inviteButtons = document.querySelectorAll('.invite-button');
+                inviteButtons.forEach(button => {
+                    button.onclick = () => {
+                        const to = button.getAttribute('data-user');
+                        invite.sendInvite(to);
+                    };
                     });
+                });
                 }
             });
         },
@@ -119,13 +133,23 @@ const inviti = () => {
             socket.emit('send-invite', { from: currentUser, to });
         },
         receiveInvite: () => {
-            socket.on('receive-invite', ({ from }) => {
-                const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
-                if (accept) {
-                    socket.emit('accept-invite', { from, to: currentUser });
-                }
-            });
-        },
+        socket.on('receive-invite', ({ from }) => {
+        const notifica = document.getElementById('notifica');
+        notifica.innerHTML = `${from} ti ha invitato a giocare. <button id="accept-invite">Accetta</button> <button id="decline-invite">Rifiuta</button>`;
+        notifica.classList.remove('hidden');
+        notifica.classList.add('show');
+
+        document.getElementById('accept-invite').onclick = () => {
+            socket.emit('accept-invite', { from, to: currentUser  });
+            notifica.classList.add('hidden');
+        };
+
+        document.getElementById('decline-invite').onclick = () => {
+            notifica.classList.add('hidden');
+        };
+    });
+},
+
         inviteError: () => {
             socket.on('invite-error', ({ message }) => {
                 `La partita contro ${opponent} sta per iniziare!`
@@ -233,15 +257,22 @@ const register = () => {
                     notifica.classList.remove('hidden');
                     notifica.classList.add('show');
                     setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
                     }, 3000);
                     const loginForm = document.getElementById('login-form');
                     const registerForm = document.getElementById('register-form');
                     registerForm.classList.add('hidden');
                     loginForm.classList.remove('hidden');
                 } else {
-                    alert(data.message || 'Errore nella registrazione.');
+                    const notifica = document.getElementById('notifica');
+                    notifica.textContent = data.message || 'Errore nella registrazione.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             } catch (error) {
                 alert('Errore di rete.');

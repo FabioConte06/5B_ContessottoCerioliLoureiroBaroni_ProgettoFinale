@@ -23,13 +23,23 @@ const database = {
         await executeQuery(
             `CREATE TABLE IF NOT EXISTS users (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                username VARCHAR(50) NOT NULL,
-                email VARCHAR(100) NOT NULL,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                email VARCHAR(100) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL
             )`
         );
     },
     register: async (username, email, password) => {
+        const checkUsername = `SELECT * FROM users WHERE username = '${username}'`;
+        const existingUsername = await executeQuery(checkUsername);
+        if (existingUsername.length > 0) {
+            throw new Error('Username già registrato.');
+        }
+        const checkEmail = `SELECT * FROM users WHERE email = '${email}'`;
+        const existingEmail = await executeQuery(checkEmail);
+        if (existingEmail.length > 0) {
+            throw new Error('Email già registrata.');
+        }
         const sql = `INSERT INTO users (username, email, password) VALUES ('${username}', '${email}', '${password}')`;
         return executeQuery(sql);
     },

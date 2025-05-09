@@ -10,6 +10,7 @@ const conf = JSON.parse(fs.readFileSync('./conf.json'));
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+const activeGames = [];
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -47,11 +48,9 @@ const inviaEmail = async (body, password) => {
 
 app.post('/register', async (req, res) => {
     const { username, email } = req.body;
-
     if (!email.endsWith('@itis-molinari.eu')) {
         return res.status(400).json({ success: false, message: 'Email non valida.' });
     }
-
     const password = Math.random().toString(36).slice(-8);
     console.log(`Password generata per ${username}: ${password}`);
     try {
@@ -60,7 +59,7 @@ app.post('/register', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: 'Errore nella registrazione.' });
+        res.status(500).json({ success: false, message: error.message || 'Errore nella registrazione.' });
     }
 });
 
@@ -114,9 +113,8 @@ io.on('connection', (socket) => {
         }
         let turno = Math.floor(Math.random() * 2);
         if (fromSocketId) {
-            lista = [fromSocketId, socket.id]
-            io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
-            io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
+            io.to(fromSocketId).emit('setup-game', { opponent: to, turno });
+            io.to(socket.id).emit('setup-game', { opponent: from, turno });
         }
     });
 
@@ -148,6 +146,10 @@ io.on('connection', (socket) => {
             io.to(lista[turno+1]).emit('update-ally', {gridEnemy});
         }
     });
+
+    socket.on('active-games', (data, callback) => {
+        callback(activeGames);
+    })
 
     socket.on('disconnect', () => {
         delete onlineUsers[socket.id];
