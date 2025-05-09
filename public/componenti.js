@@ -15,12 +15,10 @@ const websocket = () => {
         },
         receiveChatMessage: () => {
             socket.on('receive-chat-message', ({ user, message }) => {
-                console.log(`${user}: ${message}`);
             });
         },
         receiveInvite: () => {
             socket.on('receive-invite', ({ from }) => {
-                console.log("socket invito")
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
                     socket.emit('accept-invite', { from, to: currentUser });
@@ -190,7 +188,6 @@ const inviti = () => {
     });
 },
         sendInvite: (to) => {
-            console.log(currentUser, to);
             socket.emit('send-invite', { from: currentUser, to });
         },
         receiveInvite: () => {
@@ -408,15 +405,11 @@ const partita = () => {
 
     const turnoText = document.getElementById('turno');
 
-
-
     const rows = 10;
 
     const cols = 10;
 
     const cellSize = 50;
-
-
 
     return {
 
@@ -426,8 +419,6 @@ const partita = () => {
 
             let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
 
-
-
             function shuffle(array) {
 
                 for (let i = array.length - 1; i > 0; i--) {
@@ -435,51 +426,34 @@ const partita = () => {
                     const j = Math.floor(Math.random() * (i + 1));
 
                     [array[i], array[j]] = [array[j], array[i]];
-
                 }
-
             }
-
-
 
             function getPossiblePositions(length) {
 
                 const positions = [];
 
-
-
                 for (let y = 0; y < 10; y++) {
 
                     for (let x = 0; x <= 10 - length; x++) {
 
-                        positions.push({ x, y, dir: 0 }); // Horizontal
-
+                        positions.push({ x, y, dir: 0 }); // Orizzontale
                     }
-
                 }
-
-
 
                 for (let y = 0; y <= 10 - length; y++) {
 
                     for (let x = 0; x < 10; x++) {
 
-                        positions.push({ x, y, dir: 1 }); // Vertical
-
+                        positions.push({ x, y, dir: 1 }); // Verticale
                     }
-
                 }
-
-
 
                 shuffle(positions);
 
                 return positions;
 
             }
-
-
-
             function canPlace(grid, x, y, dir, length) {
 
                 for (let i = 0; i < length; i++) {
@@ -489,14 +463,9 @@ const partita = () => {
                     const ny = y + (dir === 1 ? i : 0);
 
                     if (grid[ny][nx] !== 0) return false;
-
                 }
-
                 return true;
-
             }
-
-
 
             function place(grid, x, y, dir, length) {
 
@@ -507,20 +476,14 @@ const partita = () => {
                     const ny = y + (dir === 1 ? i : 0);
 
                     grid[ny][nx] = 1;
-
                 }
-
             }
-
-
 
             function placeShip(grid, length, count) {
 
                 const positions = getPossiblePositions(length);
 
                 let placed = 0;
-
-
 
                 for (let pos of positions) {
 
@@ -538,10 +501,6 @@ const partita = () => {
 
             }
 
-
-
-            // Posiziona le navi
-
             placeShip(gridAlly, 4, 1); // Portaerei
 
             placeShip(gridAlly, 3, 2); // Incrociatori
@@ -550,11 +509,7 @@ const partita = () => {
 
             placeShip(gridAlly, 1, 4); // Sommergibili
 
-
-
             socket.emit('enemy', { from: currentUser, lista, turno, gridAlly })
-
-
 
             new Promise(resolve => {
 
@@ -566,21 +521,13 @@ const partita = () => {
 
             }).then(gridEnemy => {
 
-                console.log("nemici", gridEnemy);
-
-
-
                 socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
 
             })            
 
         },
 
-
-
         game: (gridAlly, gridEnemy, turno, lista) => {
-            console.log("inzia il turno")
-
             const gameBox = document.getElementById('game-box');
             const turnoText = document.getElementById('turno');
             let timer = null;
@@ -627,26 +574,25 @@ const partita = () => {
                 return grid.flat().every(cell => cell !== 1); // Nessuna nave rimasta
             }
 
-            let currentTurn = false; // Variabile per tracciare lo stato del turno
+            let currentTurn = false;
 
             function endTurn() {
-                if (currentTurn) return; // Evita chiamate multiple
+                if (currentTurn) return;
                 currentTurn = true;
 
                 clearInterval(timer);
                 timeLeft = 15;
-                turno = (turno + 1) % 2; // Passa al prossimo turno
+                turno = (turno + 1) % 2;
                 turnoText.innerText = `Turno dell'avversario`;
                 socket.emit('turno-over', { gridAlly, gridEnemy, lista, turno });
 
-                // Consenti l'inizio del prossimo turno
                 setTimeout(() => {
                     currentTurn = false;
-                }, 1000); // Ritardo per evitare conflitti
+                }, 1000); 
             }
 
             function startTimer() {
-                if (timer) clearInterval(timer); // Assicurati di non avere timer duplicati
+                if (timer) clearInterval(timer);
 
                 timer = setInterval(() => {
                     timeLeft--;
@@ -655,7 +601,7 @@ const partita = () => {
                     } else if (timeLeft === 5) {
                         gameBox.innerHTML += `<div>Avviso: 5 secondi rimasti!</div>`;
                     } else if (timeLeft <= 0) {
-                        clearInterval(timer); // Ferma il timer quando scade
+                        clearInterval(timer);
                         gameBox.innerHTML += `<div>Turno scaduto! Passa al prossimo giocatore.</div>`;
                         endTurn();
                     }
@@ -663,7 +609,7 @@ const partita = () => {
             }
 
             function handleCanvasClick(event) {
-                // Controlla se è il turno del giocatore corrente
+
                 if (socket.id !== lista[turno]) {
                     showTemporaryMessage("Non è il tuo turno!", 5000);
                     return;
@@ -691,7 +637,7 @@ const partita = () => {
 
                             // Torna alla lobby
                             setTimeout(() => {
-                                window.location.reload(); // Ricarica la pagina per tornare alla lobby
+                                window.location.reload();
                             }, 5000);
                             return;
                         }
@@ -705,9 +651,9 @@ const partita = () => {
             }
 
             function showTemporaryMessage(message, duration) {
-                gameBox.innerHTML = `<div>${message}</div>`; // Mostra il messaggio
+                gameBox.innerHTML = `<div>${message}</div>`;
                 setTimeout(() => {
-                    gameBox.innerHTML = ""; // Rimuove il messaggio dopo il tempo specificato
+                    gameBox.innerHTML = ""; 
                 }, duration);
             }
 
@@ -736,7 +682,6 @@ const partita = () => {
                         startTimer();
 
                         if (checkVictory(gridEnemy)) {
-                            console.log("ho vinto")
                             showTemporaryMessage("Hai vinto la battaglia!", 5000);
                             socket.emit('victory', { winner: currentUser, lista });
 
@@ -766,26 +711,12 @@ const partita = () => {
             startTimer();
         },
 
-
-
         updateAlly: (gridAllySocket, gridEnemySocket) => {
             let gridEnemy = gridAllySocket;
 
             let gridAlly = gridEnemySocket
 
-
-
-            console.log(gridEnemy)
-
-
-
-            console.log("update", gridAlly, gridEnemy)
-
-
-
             function drawGridAlly(ctx, grid) {
-
-                console.log("griglia")
 
                 ctx.clearRect(0, 0, canvas1.width, canvas1.height);
 
@@ -816,18 +747,10 @@ const partita = () => {
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
 
                         }
-
                     }
-
                 }
-
             }
-
-
-
             function drawGridEnemy(ctx, grid) {
-
-                console.log("griglia")
 
                 ctx.clearRect(0, 0, canvas1.width, canvas1.height);
 
@@ -852,43 +775,28 @@ const partita = () => {
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
 
                         }
-
                     }
-
                 }
-
             }
-
-
 
             drawGridAlly(ctxAlly, gridAlly);
 
             drawGridEnemy(ctxEnemy, gridEnemy);
         },
-
     };
-
 };
-
-
 
 const ws = websocket();
 
 ws.connect();
 
-
-
 const userLogin = login();
 
 userLogin.setup();
 
-
-
 const userRegister = register();
 
 userRegister.setup();
-
-
 
 const invite = inviti();
 
@@ -900,14 +808,7 @@ invite.receiveChatMessage();
 
 invite.receiveInvite();
 
-
-
-
-
-
-
 export { websocket, inviti, login, register, partita };
-
 
 
 socket.on('setup-game', ({ opponent, turno, lista }) => {
@@ -965,13 +866,11 @@ socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
 
 socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
 
-
     socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
 
 })
 
 socket.on('game-over', ({ message }) => {
-    console.log("Fine partita:", message);
 
     setTimeout(() => {
         const gameSection = document.getElementById('game-section');

@@ -367,7 +367,6 @@ io.on('connection', (socket) => {
     gridEnemy = gridAlly;
     gridAlly = temp;
 
-    // Invia il turno solo al giocatore corretto
     io.to(lista[turno]).emit('turno', { gridAlly, gridEnemy, turno, lista });
 });
 
@@ -387,18 +386,15 @@ io.on('connection', (socket) => {
     console.log("controllo vincitore")
     console.log(loser, socket.id)
 
-    // Invia il messaggio di vittoria a entrambi i giocatori
     io.to(lista[0]).emit('game-over', { message: `${winner} ha vinto la battaglia!` });
     io.to(lista[1]).emit('game-over', { message: `${winner} ha vinto la battaglia!` });
 
-    // Rimuovi la partita dalla lista
     for (let i = activeGames.length - 1; i >= 0; i--) {
         if (activeGames[i].player1 === winner || activeGames[i].player2 === winner) {
             activeGames.splice(i, 1);
         }
     }
 
-    // Aggiorna la lista delle partite e degli utenti
     io.emit('update-games', activeGames);
     io.emit('update-users', Object.values(onlineUsers));
 });
@@ -425,7 +421,6 @@ socket.on('utenti', (from, lista, turno) => {
     delete onlineUsers[socket.id];
     console.log('Utenti online dopo disconnessione:', onlineUsers);
 
-    // Rimuovi le partite in cui l'utente disconnesso era coinvolto
     for (let i = activeGames.length - 1; i >= 0; i--) {
         if (activeGames[i].player1 === onlineUsers[socket.id] || activeGames[i].player2 === onlineUsers[socket.id]) {
             activeGames.splice(i, 1);
