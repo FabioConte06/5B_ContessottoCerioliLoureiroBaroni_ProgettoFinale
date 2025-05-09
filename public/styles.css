@@ -24,7 +24,7 @@
 
   #canva {
     display: flex;
-    gap: 20px; /* Spazio tra i canvas, modificabile */
+    gap: 20px;
   }
   
   #login-form, #register-form, #invite-section {
@@ -187,8 +187,8 @@
   }
   #notifica.show {
     position: fixed;
-    bottom: 20px;      /* distanza dal fondo */
-    right: 20px;        /* distanza dal bordo sinistro */
+    bottom: 20px;      
+    right: 20px;        
     z-index: 2000;
     background-color: #222;
     color: #fff;
