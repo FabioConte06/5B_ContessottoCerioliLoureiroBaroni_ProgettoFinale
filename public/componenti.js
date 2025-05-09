@@ -45,6 +45,51 @@ const websocket = () => {
 
 const inviti = () => {
     return {
+        aggiornaGames: () => {
+            const gameList = document.getElementById('game-list');
+            socket.on('update-games', (games) => {
+                let html = '';
+                for (let i = 0; i < games.length; i++) {
+                    const game = games[i];
+                    html += `<li>${game.player1} vs ${game.player2}></li>`;
+            }
+                gameList.innerHTML = html;
+        });
+        },
+        gameBox: () => {
+            const gameBox = document.getElementById('game-box');
+            let timer = null;
+            socket.on('game-box', ({ event, turno, tempo}) => {
+                const currentContent = gameBox.innerHTML;
+                eventBox.innerHTML = currentContent + `<div>${event}</div>`;
+                if (timer) {
+                    clearInterval(timer);
+                    timer = setInterval(() => {
+                        if (tempo < 0) {
+                            clearInterval(timer);
+                            socket.emit('end-turn', { turno });
+                        } else {
+                            if (tempo === 10) {
+                                const currentContent = gameBox.innerHTML;
+                                gameBox.innerHTML = currentContent + `<div>Avviso: 10 secondi rimasti</div>`; 
+                            }
+                            if (tempo === 3) {
+                                const currentContent = gameBox.innerHTML;
+                                gameBox.innerHTML = currentContent + `<div>Avviso: 3 secondi rimasti</div>`; 
+                            }
+                            tempo--;
+                        }
+                    }, 1000);
+                    
+                }
+                
+            }
+        )
+        socket.on('end-turn', ({ nextTurn }) => {
+            const currentContent = gameBox.innerHTML;
+            gameBox.innerHTML = currentContent + `<div>Turno ${nextTurn} scaduto!</div>`;
+        })
+        },
         sendChatMessage: () => {
             const sendChatButton = document.getElementById('send-chat-button');
             const chatInput = document.getElementById('chat-input');
@@ -451,7 +496,7 @@ const partita = () => {
                         if (grid[i][j] === 2) {
                             ctx.fillStyle = 'red';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                        } else if (grid[i][j] === 3 && grid[i][j] === 1) {
+                        } else if (grid[i][j] === 3) {
                             ctx.fillStyle = 'lightblue';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                         }
@@ -571,7 +616,7 @@ const partita = () => {
                         if (grid[i][j] === 2) {
                             ctx.fillStyle = 'red';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                        } else if (grid[i][j] === 3 && grid[i][j] === 1) {
+                        } else if (grid[i][j] === 3) {
                             ctx.fillStyle = 'lightblue';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                         }
