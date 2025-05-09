@@ -414,7 +414,6 @@ const partita = () => {
                 });
             }).then(gridEnemy => {
                 console.log("nemici", gridEnemy);
-                shuffle(lista);
                 socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
             })            
         },
@@ -486,7 +485,7 @@ const partita = () => {
                             if (turno == 2) {
                                 turno = 0;
                             }
-                            socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
+                            
                         }
                     }
                 });
@@ -517,7 +516,9 @@ const partita = () => {
                             if (turno === 2) {
                                 turno = 0;
                             }
-
+                            drawGridEnemy(ctxEnemy, gridEnemy)
+                            socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
+                            socket.emit('turno-over', { gridAlly, gridEnemy, lista, turno })
                         }
                     }
                 };
@@ -630,8 +631,6 @@ socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
     game.updateAlly(gridAllySocket, gridEnemySocket)
 });
 
-socket.on('render-neutro', ({ gridAlly }) =>{
-    const game = partita();
-    game.render()
+socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
+    socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
 })
-

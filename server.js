@@ -114,6 +114,8 @@ io.on('connection', (socket) => {
         let turno = Math.floor(Math.random() * 2);
         if (fromSocketId) {
             lista = [fromSocketId, socket.id]
+            console.log("inizializzazione", turno)
+            console.log("inizializzazione", lista)
             io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
             io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
         }
@@ -159,7 +161,8 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-
+        console.log("lista", lista)
+        console.log("turno", turno)
         console.log(destinationSocketId, lista[turno])
 
         if (lista[turno] == destinationSocketId) {
@@ -180,6 +183,13 @@ io.on('connection', (socket) => {
             io.to(lista[turno+1]).emit('update-ally', {gridAllySocket, gridEnemySocket});
         }
     });
+
+    socket.on('turno-over', ({ gridAlly, gridEnemy, lista, turno }) => { 
+        let temp = gridEnemy
+        gridEnemy = gridAlly
+        gridAlly = temp
+        io.to(lista[turno]).emit('turno', { gridAlly, gridEnemy, turno, lista });
+    })
 
     socket.on('active-games', (data, callback) => {
         callback(activeGames);
