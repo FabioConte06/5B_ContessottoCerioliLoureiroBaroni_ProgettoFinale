@@ -382,6 +382,10 @@ io.on('connection', (socket) => {
 
     socket.on('victory', ({ winner, lista }) => {
     const loser = lista.find(id => id !== socket.id);
+    console.log("vincitore")
+    console.log(loser, winner)
+    console.log("controllo vincitore")
+    console.log(loser, socket.id)
 
     // Invia il messaggio di vittoria a entrambi i giocatori
     io.to(lista[0]).emit('game-over', { message: `${winner} ha vinto la battaglia!` });
@@ -398,6 +402,22 @@ io.on('connection', (socket) => {
     io.emit('update-games', activeGames);
     io.emit('update-users', Object.values(onlineUsers));
 });
+
+socket.on('utenti', (from, lista, turno) => {
+    let destinationSocketId = null;
+
+        for (const id in onlineUsers) {
+
+            if (onlineUsers[id] === to) {
+
+                destinationSocketId = id;
+
+                break;
+
+            }
+
+        }
+})
 
 
 

@@ -579,194 +579,196 @@ const partita = () => {
 
 
         game: (gridAlly, gridEnemy, turno, lista) => {
-    const gameBox = document.getElementById('game-box');
-    const turnoText = document.getElementById('turno');
-    let timer = null;
-    let timeLeft = 15;
+            console.log("inzia il turno")
 
-    function drawGridAlly(ctx, grid) {
-        ctx.clearRect(0, 0, canvasAlly.width, canvasAlly.height);
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                if (grid[i][j] === 2) {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                } else if (grid[i][j] === 3) {
-                    ctx.fillStyle = 'lightblue';
-                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                } else if (grid[i][j] === 1) {
-                    ctx.fillStyle = 'gray';
-                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            const gameBox = document.getElementById('game-box');
+            const turnoText = document.getElementById('turno');
+            let timer = null;
+            let timeLeft = 15;
+
+            function drawGridAlly(ctx, grid) {
+                ctx.clearRect(0, 0, canvasAlly.width, canvasAlly.height);
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        if (grid[i][j] === 2) {
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 3) {
+                            ctx.fillStyle = 'lightblue';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 1) {
+                            ctx.fillStyle = 'gray';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    function drawGridEnemy(ctx, grid) {
-        ctx.clearRect(0, 0, canvasEnemy.width, canvasEnemy.height);
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                if (grid[i][j] === 2) {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                } else if (grid[i][j] === 3) {
-                    ctx.fillStyle = 'lightblue';
-                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            function drawGridEnemy(ctx, grid) {
+                ctx.clearRect(0, 0, canvasEnemy.width, canvasEnemy.height);
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        if (grid[i][j] === 2) {
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 3) {
+                            ctx.fillStyle = 'lightblue';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    function checkVictory(grid) {
-        return grid.flat().every(cell => cell !== 1); // Nessuna nave rimasta
-    }
-
-    let currentTurn = false; // Variabile per tracciare lo stato del turno
-
-function endTurn() {
-    if (currentTurn) return; // Evita chiamate multiple
-    currentTurn = true;
-
-    clearInterval(timer);
-    timeLeft = 15;
-    turno = (turno + 1) % 2; // Passa al prossimo turno
-    turnoText.innerText = `Turno: Giocatore ${turno + 1}`;
-    socket.emit('turno-over', { gridAlly, gridEnemy, lista, turno });
-
-    // Consenti l'inizio del prossimo turno
-    setTimeout(() => {
-        currentTurn = false;
-    }, 1000); // Ritardo per evitare conflitti
-}
-
-    function startTimer() {
-    if (timer) clearInterval(timer); // Assicurati di non avere timer duplicati
-
-    timer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft === 10) {
-            gameBox.innerHTML += `<div>Avviso: 10 secondi rimasti!</div>`;
-        } else if (timeLeft === 5) {
-            gameBox.innerHTML += `<div>Avviso: 5 secondi rimasti!</div>`;
-        } else if (timeLeft <= 0) {
-            clearInterval(timer); // Ferma il timer quando scade
-            gameBox.innerHTML += `<div>Turno scaduto! Passa al prossimo giocatore.</div>`;
-            endTurn();
-        }
-    }, 1000);
-}
-
-function handleCanvasClick(event) {
-    // Controlla se è il turno del giocatore corrente
-    if (socket.id !== lista[turno]) {
-        showTemporaryMessage("Non è il tuo turno!", 5000);
-        return;
-    }
-
-    const rect = canvasEnemy.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const j = Math.floor(x / cellSize);
-    const i = Math.floor(y / cellSize);
-
-    if (i >= 0 && i < rows && j >= 0 && j < cols) {
-        if (gridEnemy[i][j] === 1) {
-            gridEnemy[i][j] = 2; // Colpito
-            showTemporaryMessage("Hai colpito una nave!", 5000);
-
-            // Resetta il timer
-            clearInterval(timer);
-            timeLeft = 15;
-            startTimer();
-
-            if (checkVictory(gridEnemy)) {
-                showTemporaryMessage("Hai vinto la battaglia!", 5000);
-                socket.emit('victory', { winner: currentUser, lista });
-
-                // Torna alla lobby
-                setTimeout(() => {
-                    window.location.reload(); // Ricarica la pagina per tornare alla lobby
-                }, 5000);
-                return;
+            function checkVictory(grid) {
+                return grid.flat().every(cell => cell !== 1); // Nessuna nave rimasta
             }
-        } else if (gridEnemy[i][j] === 0) {
-            gridEnemy[i][j] = 3; // Mancato
-            showTemporaryMessage("Hai mancato il colpo!", 5000);
-            endTurn();
-        }
-        drawGridEnemy(ctxEnemy, gridEnemy);
-    }
-}
 
-function showTemporaryMessage(message, duration) {
-    gameBox.innerHTML = `<div>${message}</div>`; // Mostra il messaggio
-    setTimeout(() => {
-        gameBox.innerHTML = ""; // Rimuove il messaggio dopo il tempo specificato
-    }, duration);
-}
+            let currentTurn = false; // Variabile per tracciare lo stato del turno
 
-function handleCanvasClick(event) {
-    // Controlla se è il turno del giocatore corrente
-    if (socket.id !== lista[turno]) {
-        return;
-    }
+            function endTurn() {
+                if (currentTurn) return; // Evita chiamate multiple
+                currentTurn = true;
 
-    const rect = canvasEnemy.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const j = Math.floor(x / cellSize);
-    const i = Math.floor(y / cellSize);
+                clearInterval(timer);
+                timeLeft = 15;
+                turno = (turno + 1) % 2; // Passa al prossimo turno
+                turnoText.innerText = `Turno dell'avversario`;
+                socket.emit('turno-over', { gridAlly, gridEnemy, lista, turno });
 
-    if (i >= 0 && i < rows && j >= 0 && j < cols) {
-        if (gridEnemy[i][j] === 1) {
-            gridEnemy[i][j] = 2; // Colpito
-            showTemporaryMessage("Hai colpito una nave!", 5000);
-
-            // Resetta il timer
-            clearInterval(timer);
-            timeLeft = 15;
-            startTimer();
-
-            if (checkVictory(gridEnemy)) {
-                showTemporaryMessage("Hai vinto la battaglia!", 5000);
-                socket.emit('victory', { winner: currentUser, lista });
-
-                // Torna alla lobby senza ricaricare la pagina
+                // Consenti l'inizio del prossimo turno
                 setTimeout(() => {
-                    const gameSection = document.getElementById('game-section');
-                    const inviteSection = document.getElementById('invite-section');
-                    gameSection.classList.add('hidden');
-                    inviteSection.classList.remove('hidden');
-                }, 5000);
-                return;
+                    currentTurn = false;
+                }, 1000); // Ritardo per evitare conflitti
             }
-        } else if (gridEnemy[i][j] === 0) {
-            gridEnemy[i][j] = 3; // Mancato
-            showTemporaryMessage("Hai mancato il colpo!", 5000);
-            endTurn();
-        }
-        drawGridEnemy(ctxEnemy, gridEnemy);
-    }
-}
 
-    canvasEnemy.addEventListener('click', handleCanvasClick);
+            function startTimer() {
+                if (timer) clearInterval(timer); // Assicurati di non avere timer duplicati
 
-    drawGridAlly(ctxAlly, gridAlly);
-    drawGridEnemy(ctxEnemy, gridEnemy);
-    turnoText.innerText = `Turno: Giocatore ${turno + 1}`;
-    startTimer();
-},
+                timer = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft === 10) {
+                        gameBox.innerHTML += `<div>Avviso: 10 secondi rimasti!</div>`;
+                    } else if (timeLeft === 5) {
+                        gameBox.innerHTML += `<div>Avviso: 5 secondi rimasti!</div>`;
+                    } else if (timeLeft <= 0) {
+                        clearInterval(timer); // Ferma il timer quando scade
+                        gameBox.innerHTML += `<div>Turno scaduto! Passa al prossimo giocatore.</div>`;
+                        endTurn();
+                    }
+                }, 1000);
+            }
+
+            function handleCanvasClick(event) {
+                // Controlla se è il turno del giocatore corrente
+                if (socket.id !== lista[turno]) {
+                    showTemporaryMessage("Non è il tuo turno!", 5000);
+                    return;
+                }
+
+                const rect = canvasEnemy.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const j = Math.floor(x / cellSize);
+                const i = Math.floor(y / cellSize);
+
+                if (i >= 0 && i < rows && j >= 0 && j < cols) {
+                    if (gridEnemy[i][j] === 1) {
+                        gridEnemy[i][j] = 2; // Colpito
+                        showTemporaryMessage("Hai colpito una nave!", 5000);
+
+                        // Resetta il timer
+                        clearInterval(timer);
+                        timeLeft = 15;
+                        startTimer();
+
+                        if (checkVictory(gridEnemy)) {
+                            showTemporaryMessage("Hai vinto la battaglia!", 5000);
+                            socket.emit('victory', { winner: currentUser, lista });
+
+                            // Torna alla lobby
+                            setTimeout(() => {
+                                window.location.reload(); // Ricarica la pagina per tornare alla lobby
+                            }, 5000);
+                            return;
+                        }
+                    } else if (gridEnemy[i][j] === 0) {
+                        gridEnemy[i][j] = 3; // Mancato
+                        showTemporaryMessage("Hai mancato il colpo!", 5000);
+                        endTurn();
+                    }
+                    drawGridEnemy(ctxEnemy, gridEnemy);
+                }
+            }
+
+            function showTemporaryMessage(message, duration) {
+                gameBox.innerHTML = `<div>${message}</div>`; // Mostra il messaggio
+                setTimeout(() => {
+                    gameBox.innerHTML = ""; // Rimuove il messaggio dopo il tempo specificato
+                }, duration);
+            }
+
+            function handleCanvasClick(event) {
+                // Controlla se è il turno del giocatore corrente
+                if (socket.id !== lista[turno]) {
+                    return;
+                }
+
+                const rect = canvasEnemy.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const j = Math.floor(x / cellSize);
+                const i = Math.floor(y / cellSize);
+
+                if (i >= 0 && i < rows && j >= 0 && j < cols) {
+                    if (gridEnemy[i][j] === 1) {
+                        gridEnemy[i][j] = 2; // Colpito
+                        showTemporaryMessage("Hai colpito una nave!", 5000);
+
+                        socket.emit('update', { gridAlly, gridEnemy, turno, lista });
+
+                        // Resetta il timer
+                        clearInterval(timer);
+                        timeLeft = 15;
+                        startTimer();
+
+                        if (checkVictory(gridEnemy)) {
+                            console.log("ho vinto")
+                            showTemporaryMessage("Hai vinto la battaglia!", 5000);
+                            socket.emit('victory', { winner: currentUser, lista });
+
+                            // Torna alla lobby senza ricaricare la pagina
+                            setTimeout(() => {
+                                const gameSection = document.getElementById('game-section');
+                                const inviteSection = document.getElementById('invite-section');
+                                gameSection.classList.add('hidden');
+                                inviteSection.classList.remove('hidden');
+                            }, 5000);
+                            return;
+                        }
+                    } else if (gridEnemy[i][j] === 0) {
+                        gridEnemy[i][j] = 3; // Mancato
+                        showTemporaryMessage("Hai mancato il colpo!", 5000);
+                        endTurn();
+                    }
+                    drawGridEnemy(ctxEnemy, gridEnemy);
+                }
+            }
+
+            canvasEnemy.addEventListener('click', handleCanvasClick);
+
+            drawGridAlly(ctxAlly, gridAlly);
+            drawGridEnemy(ctxEnemy, gridEnemy);
+            turnoText.innerText = `È il tuo turno`;
+            startTimer();
+        },
 
 
 
         updateAlly: (gridAllySocket, gridEnemySocket) => {
-
-
-
             let gridEnemy = gridAllySocket;
 
             let gridAlly = gridEnemySocket
@@ -861,8 +863,7 @@ function handleCanvasClick(event) {
 
             drawGridAlly(ctxAlly, gridAlly);
 
-            drawGridEnemy(ctxEnemy, gridEnemy)
-
+            drawGridEnemy(ctxEnemy, gridEnemy);
         },
 
     };
@@ -970,9 +971,8 @@ socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
 })
 
 socket.on('game-over', ({ message }) => {
-    showTemporaryMessage(message, 5000);
+    console.log("Fine partita:", message);
 
-    // Torna alla lobby senza ricaricare la pagina
     setTimeout(() => {
         const gameSection = document.getElementById('game-section');
         const inviteSection = document.getElementById('invite-section');
