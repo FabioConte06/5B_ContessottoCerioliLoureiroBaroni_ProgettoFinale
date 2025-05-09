@@ -7,8 +7,8 @@ const partita = () => {
             const cols = 10;
             const canvasAlly = document.getElementById('canvas1');
             const canvasEnemy = document.getElementById('canvas2');
-            const ctxAlly = canvasAlly.getContext('2d');
-            const ctxEnemy = canvasEnemy.getContext('2d');
+            const ctxAlly = canvas1.getContext('2d');
+            const ctxEnemy = canvas2.getContext('2d');
             const turnoText = document.getElementById('turno');
             const nextTurn = document.getElementById('nextTurn');
             const form = document.getElementById('form');
@@ -16,127 +16,75 @@ const partita = () => {
 
             let gridAlly = Array.from({ length: rows }, () => Array(cols).fill(0));
             let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
-            const turno = Math.floor(Math.random() * 2);
+            let turno = Math.floor(Math.random() * 2);
 
-            while (cond < 2) {
-                let dir = Math.floor(Math.random() * 2) + 1;
-            
-                if (dir == 1) {
-                    let posX = Math.floor(Math.random() * 7) + 0;
-                    let posY = Math.floor(Math.random() * 9) + 0;
-            
-                    trovato = false
-            
-                    for (i = 0; i < 3; i++) {
-                        if (gridAlly[posY][posX+i] == 1) {
-                            trovato = true
-                        }
-                    }
-            
-                    if (trovato==false) {
-                        for (i = 0; i < 3; i++) {
-                            gridAlly[posY][posX+i] = 1
-                        }
-                        cond++
-                    }
-                }
-            
-                else {
-                    let posX = Math.floor(Math.random() * 9) + 0;
-                    let posY = Math.floor(Math.random() * 7) + 0;
-            
-                    trovato = false
-            
-                    for (i = 0; i < 3; i++) {
-                        if (gridAlly[posY+i][posX] == 1) {
-                            trovato = true
-                        }
-                            
-                    }
-            
-                    if (trovato==false) {
-                        for (i = 0; i < 3; i++) {
-                            gridAlly[posY+i][posX] = 1
-                        }
-                        cond++
-                    }   
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
                 }
             }
             
-            cond = 0
+            function getPossiblePositions(length) {
+                const positions = [];
             
-            //Torpedinieri
-            while (cond < 3) {
-                let dir = Math.floor(Math.random() * 2) + 1;
-            
-                if (dir == 1) {
-                    let posX = Math.floor(Math.random() * 8) + 0;
-                    let posY = Math.floor(Math.random() * 9) + 0;
-            
-                    trovato = false
-            
-                    for (i = 0; i < 2; i++) {
-                        if (gridAlly[posY][posX+i] == 1) {
-                            trovato = true
-                        }
-                    }
-            
-                    if (trovato==false) {
-                        for (i = 0; i < 2; i++) {
-                            gridAlly[posY][posX+i] = 1
-                        }
-                        cond++
+                for (let y = 0; y < 10; y++) {
+                    for (let x = 0; x <= 10 - length; x++) {
+                        positions.push({ x, y, dir: 0 }); // Horizontal
                     }
                 }
             
-                else {
-                    let posX = Math.floor(Math.random() * 9) + 0;
-                    let posY = Math.floor(Math.random() * 8) + 0;
-            
-                    trovato = false
-            
-                    for (i = 0; i < 2; i++) {
-                        if (gridAlly[posY+i][posX] == 1) {
-                            trovato = true
-                        }
-                            
+                for (let y = 0; y <= 10 - length; y++) {
+                    for (let x = 0; x < 10; x++) {
+                        positions.push({ x, y, dir: 1 }); // Vertical
                     }
+                }
             
-                    if (trovato==false) {
-                        for (i = 0; i < 2; i++) {
-                            gridAlly[posY+i][posX] = 1
-                        }
-                        cond++
-                    }
-                    
+                shuffle(positions);
+                return positions;
+            }
+            
+            function canPlace(grid, x, y, dir, length) {
+                for (let i = 0; i < length; i++) {
+                    const nx = x + (dir === 0 ? i : 0);
+                    const ny = y + (dir === 1 ? i : 0);
+                    if (grid[ny][nx] !== 0) return false;
+                }
+                return true;
+            }
+            
+            function place(grid, x, y, dir, length) {
+                for (let i = 0; i < length; i++) {
+                    const nx = x + (dir === 0 ? i : 0);
+                    const ny = y + (dir === 1 ? i : 0);
+                    grid[ny][nx] = 1;
                 }
             }
             
-            cond = 0
+            function placeShip(grid, length, count) {
+                const positions = getPossiblePositions(length);
+                let placed = 0;
             
-            //Sommergibili
-            while (cond <4) {
-                let posX = Math.floor(Math.random() * 9) + 0;
-                let posY = Math.floor(Math.random() * 9) + 0;
-            
-                trovato=false
-                
-                if (gridAlly[posY][posX] == 1) {
-                    trovato=true
+                for (let pos of positions) {
+                    if (placed >= count) break;
+                    if (canPlace(grid, pos.x, pos.y, pos.dir, length)) {
+                        place(grid, pos.x, pos.y, pos.dir, length);
+                        placed++;
+                    }
                 }
-            
-                if (trovato=false) {
-                    gridAlly[posY][posX] = 1
-                    cond++
-                }
-                
             }
-
-            drawGrid(ctxAlly, gridAlly)
+            
+            // Posiziona le navi
+            placeShip(gridAlly, 4, 1); // Portaerei
+            placeShip(gridAlly, 3, 2); // Incrociatori
+            placeShip(gridAlly, 2, 3); // Torpedinieri
+            placeShip(gridAlly, 1, 4); // Sommergibili
+            
             
             // Disegna la griglia
             function drawGrid(ctx, grid, hideShips) {
-                ctx.clearRect(0, 0, canvasAlly.width, canvasAlly.height);
+                console.log("griglia")
+                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
                         ctx.strokeStyle = 'black';
@@ -157,15 +105,17 @@ const partita = () => {
             
             // Aggiorna la griglia
             function aggiorna() {
-                drawGrid(ctx1, grid1, turno !== 1);
-                drawGrid(ctx2, grid2, turno !== 2);
+                console.log("update")
+                drawGrid(ctxAlly, gridAlly, turno !== 1);
+                drawGrid(ctxEnemy, gridEnemy, turno !== 2);
                 turnoText.innerText = `Turno: Giocatore ${turno}`;
             }
             
             nextTurn.onclick = function() {
-              aggiorna();
-              form.style.display = "none"
-              overlay.style.display = "none"
+                console.log("click")
+                aggiorna();
+                form.style.display = "none"
+                overlay.style.display = "none"
             }
             
             // Gestione del click sulla griglia
@@ -191,8 +141,8 @@ const partita = () => {
                 });
             }
             
-            gestisciClick(canvas1, grid1);
-            gestisciClick(canvas2, grid2);
+            gestisciClick(canvasAlly, gridAlly);
+            gestisciClick(canvasEnemy, gridEnemy);
             aggiorna();
             
         }

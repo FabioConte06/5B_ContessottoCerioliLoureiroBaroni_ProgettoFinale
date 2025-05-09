@@ -112,11 +112,38 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-        console.log(from)
-        console.log(to)
+        let turno = Math.floor(Math.random() * 2);
         if (fromSocketId) {
-            io.to(fromSocketId).emit('start-game', { opponent: to });
-            io.to(socket.id).emit('start-game', { opponent: from });
+            io.to(fromSocketId).emit('setup-game', { opponent: to, turno });
+            io.to(socket.id).emit('setup-game', { opponent: from, turno });
+        }
+    });
+
+    socket.on('enemy', ({ to, gridAlly }) => {
+        let destinationSocketId = null;
+
+        for (const id in onlineUsers) {
+            if (onlineUsers[id] === to) {
+                destinationSocketId = id;
+                break;
+            }
+        }
+        if (destinationSocketId) {
+            io.to(destinationSocketId).emit('enemy-setup', { gridAlly });
+        }
+    });
+
+    socket.on('start', ({ from, gridAlly, gridEnemy, turno }) => {
+        let destinationSocketId = null;
+
+        for (const id in onlineUsers) {
+            if (onlineUsers[id] === from) {
+                destinationSocketId = id;
+                break;
+            }
+        }
+        if (destinationSocketId) {
+            io.to(destinationSocketId).emit('start-game', { gridAlly, gridEnemy, turno });
         }
     });
 

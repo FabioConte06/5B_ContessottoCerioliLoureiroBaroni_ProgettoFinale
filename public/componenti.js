@@ -120,10 +120,8 @@ const inviti = () => {
         },
         receiveInvite: () => {
             socket.on('receive-invite', ({ from }) => {
-                console.log("compnenti:", from)
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
-                    console.log("accetta:", from)
                     socket.emit('accept-invite', { from, to: currentUser });
                 }
             });
@@ -301,23 +299,12 @@ const register = () => {
 
 const partita = () => {
     return {
-        setup: () => {
-            console.log("conferma")
-            const cellSize = 50;
+        setup: (turno) => {
             const rows = 10;
             const cols = 10;
-            const canvasAlly = document.getElementById('canvas1');
-            const canvasEnemy = document.getElementById('canvas2');
-            const ctxAlly = canvas1.getContext('2d');
-            const ctxEnemy = canvas2.getContext('2d');
-            const turnoText = document.getElementById('turno');
-            const nextTurn = document.getElementById('nextTurn');
-            const form = document.getElementById('form');
-            const overlay = document.getElementById('overlay');
 
             let gridAlly = Array.from({ length: rows }, () => Array(cols).fill(0));
             let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
-            let turno = Math.floor(Math.random() * 2);
 
             function shuffle(array) {
                 for (let i = array.length - 1; i > 0; i--) {
@@ -380,8 +367,28 @@ const partita = () => {
             placeShip(gridAlly, 3, 2); // Incrociatori
             placeShip(gridAlly, 2, 3); // Torpedinieri
             placeShip(gridAlly, 1, 4); // Sommergibili
-            
-            
+
+            socket.emit('enemy', { to: currentUser, gridAlly });
+            socket.on('enemy-setup', ({ gridEnemySocket }) => {
+                gridEnemy = gridEnemySocket
+                
+            })
+            socket.emit('start', { from, gridAlly, gridEnemy, turno });
+        },
+        game: (gridAlly, gridEnemy) => {
+            const canvasAlly = document.getElementById('canvas1');
+            const canvasEnemy = document.getElementById('canvas2');
+            const ctxAlly = canvasAlly.getContext('2d');
+            const ctxEnemy = canvasEnemy.getContext('2d');
+            const turnoText = document.getElementById('turno');
+            const nextTurn = document.getElementById('nextTurn');
+            const form = document.getElementById('form');
+            const overlay = document.getElementById('overlay');
+
+            const cellSize = 50;
+
+            socket.on('enemy-setup', ({ gridAlly, gridEnemy, turno }) => {})
+
             // Disegna la griglia
             function drawGrid(ctx, grid, hideShips) {
                 console.log("griglia")
@@ -445,7 +452,6 @@ const partita = () => {
             gestisciClick(canvasAlly, gridAlly);
             gestisciClick(canvasEnemy, gridEnemy);
             aggiorna();
-            
         }
     };
 };
@@ -469,7 +475,7 @@ invite.receiveInvite();
 
 export { websocket, inviti, login, register, partita };
 
-socket.on('start-game', ({ opponent }) => {
+socket.on('setup-game', ({ opponent, turno }) => {
     const notifica = document.getElementById('notifica');
     notifica.textContent = `La partita contro ${opponent} sta per iniziare!`;
     notifica.classList.remove('hidden');
@@ -483,6 +489,10 @@ socket.on('start-game', ({ opponent }) => {
     inviteSection.classList.add('hidden');
     gameSection.classList.remove('hidden');
     const game = partita();
-    game.setup();
+    game.setup(turno);
 });
 
+socket.on('start-game', ({ opponent }) => {
+    const game = partita();
+    game.game();
+});
