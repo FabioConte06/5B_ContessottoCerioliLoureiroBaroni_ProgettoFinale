@@ -186,7 +186,14 @@
     font-family: sans-serif;
   }
   #notifica.show {
-    opacity: 1;
+    position: fixed;
+    bottom: 20px;      /* distanza dal fondo */
+    right: 20px;        /* distanza dal bordo sinistro */
+    z-index: 2000;
+    background-color: #222;
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
   }
   .hidden {
     display: none;
