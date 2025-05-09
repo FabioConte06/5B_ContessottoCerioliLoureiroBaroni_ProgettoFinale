@@ -173,16 +173,45 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('update', ({ gridAlly, gridEnemy, turno, lista }) => {
-        gridEnemySocket = gridEnemy
-        gridAllySocket = gridAlly
-        if (turno == 1) {
-            io.to(lista[turno-1]).emit('update-ally', {gridAllySocket, gridEnemySocket});
+    socket.on('update', ({ gridAlly, gridEnemy, turno, lista, i, j }) => {
+        const nextTurn = (turno + 1) % lista.length;
+        const currentPlayer = onlineUsers[lista[nextTurn]];
+
+        let resultMessage = '';
+        if (gridEnemy[i][j] === 1) {
+            gridEnemy[i][j] = 2;
+            resultMessage = `${onlineUsers[lista[turno]]} ha colpito una nave!`;
+        } else if (gridEnemy[i][j] === 0) {
+            gridEnemy[i][j] = 3;
+            resultMessage = `${onlineUsers[lista[turno]]} ha mancato il bersaglio.`;
         }
-        else {
-            io.to(lista[turno+1]).emit('update-ally', {gridAllySocket, gridEnemySocket});
-        }
-    });
+
+            const allShipsDestroyed = (grid) => {
+                for (let row = 0; row < grid.length; row++) {
+                    for (let col = 0; col < grid[row].length; col++) {
+                        if (grid[row][col] === 1) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            };
+
+            if (allShipsDestroyed(gridEnemy)) {
+                const winner = onlineUsers[lista[turno]];
+                io.emit('game-event', { message: `${winner} ha vinto la battaglia!` });
+
+                setTimeout(() => {
+                    io.to(lista[0]).emit('end-game');
+                    io.to(lista[1]).emit('end-game');
+                }, 5000);
+                return;
+            }
+
+            io.to(lista[nextTurn]).emit('update-ally', { gridAllySocket: gridAlly, gridEnemySocket: gridEnemy, currentPlayer });
+            io.emit('turno', { turno: nextTurn, currentPlayer });
+            io.emit('game-event', { message: resultMessage });
+        });
 
     socket.on('active-games', (data, callback) => {
         callback(activeGames);

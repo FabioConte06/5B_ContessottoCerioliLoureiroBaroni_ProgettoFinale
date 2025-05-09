@@ -56,38 +56,36 @@ const inviti = () => {
             });
         },
         gameBox: () => {
-            const gameBox = document.getElementById('game-box');
-            let timer = null;
-            socket.on('game-box', ({ event, turno, tempo}) => {
-                const currentContent = gameBox.innerHTML;
-                eventBox.innerHTML = currentContent + `<div>${event}</div>`;
-                if (timer) {
-                    clearInterval(timer);
-                    timer = setInterval(() => {
-                        if (tempo < 0) {
-                            clearInterval(timer);
-                            socket.emit('end-turn', { turno });
-                        } else {
-                            if (tempo === 10) {
-                                const currentContent = gameBox.innerHTML;
-                                gameBox.innerHTML = currentContent + `<div>Avviso: 10 secondi rimasti</div>`; 
-                            }
-                            if (tempo === 3) {
-                                const currentContent = gameBox.innerHTML;
-                                gameBox.innerHTML = currentContent + `<div>Avviso: 3 secondi rimasti</div>`; 
-                            }
-                            tempo--;
-                        }
-                    }, 1000);
-                    
+    const gameBox = document.getElementById('game-box');
+    let timer = null;
+
+    socket.on('game-box', ({ event, turno, tempo }) => {
+        const currentContent = gameBox.innerHTML;
+        gameBox.innerHTML = currentContent + `<div>${event}</div>`;
+
+        if (timer) {
+            clearInterval(timer);
+        }
+
+        timer = setInterval(() => {
+            if (tempo <= 0) {
+                clearInterval(timer);
+                socket.emit('end-turn', { turno });
+            } else {
+                if (tempo === 10) {
+                    gameBox.innerHTML += `<div>Avviso: 10 secondi rimasti</div>`;
                 }
-                
-            }
-        )
-        socket.on('end-turn', ({ nextTurn }) => {
-            const currentContent = gameBox.innerHTML;
-            gameBox.innerHTML = currentContent + `<div>Turno ${nextTurn} scaduto!</div>`;
-        })
+                if (tempo === 3) {
+                    gameBox.innerHTML += `<div>Avviso: 3 secondi rimasti</div>`;
+                }
+                tempo--;
+                }
+                }, 1000);
+            });
+
+            socket.on('end-turn', ({ nextTurn }) => {
+                gameBox.innerHTML += `<div>Turno ${nextTurn} scaduto!</div>`;
+            });
         },
         sendChatMessage: () => {
             const sendChatButton = document.getElementById('send-chat-button');
@@ -176,22 +174,29 @@ const inviti = () => {
             socket.emit('send-invite', { from: currentUser, to });
         },
         receiveInvite: () => {
-        socket.on('receive-invite', ({ from }) => {
-        const notifica = document.getElementById('notifica');
-        notifica.innerHTML = `${from} ti ha invitato a giocare. <button id="accept-invite">Accetta</button> <button id="decline-invite">Rifiuta</button>`;
-        notifica.classList.remove('hidden');
-        notifica.classList.add('show');
+            socket.on('receive-invite', ({ from }) => {
+            const notifica = document.getElementById('notifica');
+            notifica.innerHTML = `${from} ti ha invitato a giocare. <button id="accept-invite">Accetta</button> <button id="decline-invite">Rifiuta</button>`;
+            notifica.classList.remove('hidden');
+            notifica.classList.add('show');
 
-        document.getElementById('accept-invite').onclick = () => {
-            socket.emit('accept-invite', { from, to: currentUser  });
-            notifica.classList.add('hidden');
-        };
+            const timeout = setTimeout(() => {
+                notifica.classList.remove('show');
+                setTimeout(() => notifica.classList.add('hidden'), 400);
+            }, 15000);
 
-        document.getElementById('decline-invite').onclick = () => {
-            notifica.classList.add('hidden');
-        };
-    });
-},
+            document.getElementById('accept-invite').onclick = () => {
+                clearTimeout(timeout);
+                socket.emit('accept-invite', { from, to: currentUser });
+                notifica.classList.add('hidden');
+            };
+
+            document.getElementById('decline-invite').onclick = () => {
+                clearTimeout(timeout);
+                notifica.classList.add('hidden');
+                };
+                });
+            },
 
         inviteError: () => {
             socket.on('invite-error', ({ message }) => {
@@ -537,31 +542,15 @@ const partita = () => {
             // Gestione del click sulla griglia
             function creaGestoreClick(gridNemico) {
                 return function handleCanvasClick(event) {
-                    let canvas = canvasEnemy
-                    canvas = event.currentTarget;
-                    const rect = canvas.getBoundingClientRect();
+                    const rect = canvasEnemy.getBoundingClientRect();
                     const x = event.clientX - rect.left;
                     const y = event.clientY - rect.top;
                     const j = Math.floor(x / cellSize);
                     const i = Math.floor(y / cellSize);
-            
-                    if (i >= 0 && i < rows && j >= 0 && j < cols) {
-                        if (gridNemico[i][j] === 1) {
-                            console.log("colpito")
-                            gridNemico[i][j] = 2;
-                            aggiorna();
 
-                        } else if (gridNemico[i][j] === 0) {
-                            console.log("mancato")
-                            canvas.removeEventListener('click', handler);
-                            gridNemico[i][j] = 3;
-                            turno++;
-                            if (turno === 2) {
-                                turno = 0;
-                            }
-                            drawGridEnemy(ctxEnemy, gridEnemy)
-                            socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
-                            socket.emit('turno-over', { gridAlly, gridEnemy, lista, turno })
+                    if (i >= 0 && i < rows && j >= 0 && j < cols) {
+                        if (gridNemico[i][j] === 1 || gridNemico[i][j] === 0) {
+                            socket.emit('update', { gridAlly, gridEnemy, turno, lista, i, j });
                         }
                     }
                 };
@@ -638,8 +627,6 @@ const userRegister = register();
 userRegister.setup();
 
 const invite = inviti();
-invite.aggiornaGames();
-invite.gameBox();
 invite.updateUsers();
 invite.sendChatMessage();
 invite.receiveChatMessage();
@@ -679,3 +666,19 @@ socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
 socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
     socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
 })
+
+socket.on('game-event', ({ message }) => {
+    const gameBox = document.getElementById('game-box');
+    gameBox.innerHTML += `<div>${message}</div>`;
+});
+
+socket.on('end-game', () => {
+    const gameSection = document.getElementById('game-section');
+    const inviteSection = document.getElementById('invite-section');
+
+    gameSection.classList.add('hidden');
+    inviteSection.classList.remove('hidden');
+
+    const gameBox = document.getElementById('game-box');
+    gameBox.innerHTML = '';
+});
