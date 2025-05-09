@@ -49,12 +49,11 @@ const inviti = () => {
             const gameList = document.getElementById('game-list');
             socket.on('update-games', (games) => {
                 let html = '';
-                for (let i = 0; i < games.length; i++) {
-                    const game = games[i];
-                    html += `<li>${game.player1} vs ${game.player2}></li>`;
-            }
+                for (const game of games) {
+                    html += `<li>${game.player1} vs ${game.player2}</li>`;
+                }
                 gameList.innerHTML = html;
-        });
+            });
         },
         gameBox: () => {
             const gameBox = document.getElementById('game-box');
@@ -678,6 +677,12 @@ socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
     game.updateAlly(gridAllySocket, gridEnemySocket)
 });
 
-socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
-    socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
-})
+socket.on('turno-over', ({ gridAlly, gridEnemy, lista, turno }) => {
+    turno = (turno + 1) % 2;
+    io.to(lista[turno]).emit('turno', { gridAlly, gridEnemy, turno, lista });
+});
+
+socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) => {
+    const game = partita();
+    game.game(gridAlly, gridEnemy, turno, lista);
+});

@@ -103,27 +103,23 @@ io.on('connection', (socket) => {
     });
 
     socket.on('accept-invite', ({ from, to }) => {
-        console.log("server")
-        let fromSocketId = null;
-        for (const id in onlineUsers) {
-            if (onlineUsers[id] === from) {
-                fromSocketId = id;
-                break;
-            }
+    console.log("server");
+    let fromSocketId = null;
+    for (const id in onlineUsers) {
+        if (onlineUsers[id] === from) {
+            fromSocketId = id;
+            break;
         }
-        let turno = Math.floor(Math.random() * 2);
-        if (fromSocketId) {
-            const gioco = {
-                player1: from,
-                player2: to,
-                players: [fromSocketId, socket.id],
-            };
-            activeGames.push(gioco);
-            console.log("inizializzazione", turno)
-            io.to(fromSocketId).emit('setup-game', { opponent: to, turno });
-            io.to(socket.id).emit('setup-game', { opponent: from, turno });
-        }
-    });
+    }
+    let turno = Math.floor(Math.random() * 2);
+    if (fromSocketId) {
+        const lista = [fromSocketId, socket.id];
+        activeGames.push({ player1: from, player2: to, lista });
+        io.emit('update-games', activeGames); // Notifica i client delle partite attive
+        io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
+        io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
+    }
+});
 
     socket.on('enemy', ({ from, lista, turno, gridAlly }) => {
 
@@ -165,8 +161,7 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-        console.log("lista", lista)
-        console.log("turno", turno)
+
         console.log(destinationSocketId, lista[turno])
 
         if (lista[turno] == destinationSocketId) {
@@ -188,30 +183,25 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('turno-over', ({ gridAlly, gridEnemy, lista, turno }) => { 
-        let temp = gridEnemy
-        gridEnemy = gridAlly
-        gridAlly = temp
-        io.to(lista[turno]).emit('turno', { gridAlly, gridEnemy, turno, lista });
-    })
-
     socket.on('active-games', (data, callback) => {
         callback(activeGames);
     })
 
     socket.on('disconnect', () => {
-        const index=activeGames.findIndex((game) => game.players.includes(socket.id));
-        if (index !== -1) {
-            activeGames.splice(index, 1);
-            io.emit('update-games', activeGames);
+    const disconnectedUser = onlineUsers[socket.id];
+    delete onlineUsers[socket.id];
+    console.log('Utenti online dopo disconnessione:', onlineUsers);
+
+    for (let i = activeGames.length - 1; i >= 0; i--) {
+        if (activeGames[i].player1 === disconnectedUser || activeGames[i].player2 === disconnectedUser) {
+            activeGames.splice(i, 1);
         }
-        delete onlineUsers[socket.id];
-        console.log('Utenti online dopo disconnessione:', onlineUsers);
-        io.emit('update-users', Object.values(onlineUsers));
-    });
+    }
+    io.emit('update-users', Object.values(onlineUsers));
+    io.emit('update-games', activeGames);
+});
 });
 
 server.listen(conf.port, () => {
     console.log(`Server running on port ${conf.port}`);
 });
-
