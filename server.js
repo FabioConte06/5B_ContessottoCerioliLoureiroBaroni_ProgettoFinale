@@ -113,37 +113,71 @@ io.on('connection', (socket) => {
         }
         let turno = Math.floor(Math.random() * 2);
         if (fromSocketId) {
-            io.to(fromSocketId).emit('setup-game', { opponent: to, turno });
-            io.to(socket.id).emit('setup-game', { opponent: from, turno });
+            lista = [fromSocketId, socket.id]
+            io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
+            io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
         }
     });
 
-    socket.on('enemy', ({ to, gridAlly }) => {
+    socket.on('enemy', ({ from, lista, turno, gridAlly }) => {
+
+        gridEnemySocket = gridAlly
+        
         let destinationSocketId = null;
 
         for (const id in onlineUsers) {
-            if (onlineUsers[id] === to) {
+            if (onlineUsers[id] === from) {
                 destinationSocketId = id;
                 break;
             }
         }
-        if (destinationSocketId) {
-            io.to(destinationSocketId).emit('enemy-setup', { gridAlly });
-        }
-    });
 
-    socket.on('start', ({ from, to, gridAlly, gridEnemy, turno, lista }) => {
-        if (lista[turno]) {
-            io.to(lista[turno]).emit('start-game', { from, to, gridAlly, gridEnemy, turno, lista });
-        }
-    });
-
-    socket.on('update', ({ gridEnemy, turno, lista }) => {
-        if (turno == 1) {
-            io.to(lista[turno-1]).emit('update-ally', {gridEnemy});
+        if (lista[turno] == destinationSocketId) {
+            if (turno == 0) {
+                io.to(lista[turno+1]).emit('enemy-setup', { gridEnemySocket });
+            }
+            else {
+                io.to(lista[turno-1]).emit('enemy-setup', { gridEnemySocket });
+            }   
         }
         else {
-            io.to(lista[turno+1]).emit('update-ally', {gridEnemy});
+            io.to(lista[turno]).emit('enemy-setup', { gridEnemySocket });
+        }
+    });
+
+    socket.on('start', ({ from, gridAlly, gridEnemy, turno, lista }) => {
+        console.log("turno")
+
+        let destinationSocketId = null;
+
+        let gridEnemySocket = gridAlly
+        let gridAllySocket = gridEnemy
+
+        for (const id in onlineUsers) {
+            if (onlineUsers[id] === from) {
+                destinationSocketId = id;
+                break;
+            }
+        }
+
+        console.log(destinationSocketId, lista[turno])
+
+        if (lista[turno] == destinationSocketId) {
+            io.to(lista[turno]).emit('start-game', { gridAlly, gridEnemy, turno, lista });
+        }
+        else {
+            io.to(destinationSocketId).emit('update-ally', {gridAllySocket, gridEnemySocket});
+        }
+    });
+
+    socket.on('update', ({ gridAlly, gridEnemy, turno, lista }) => {
+        gridEnemySocket = gridEnemy
+        gridAllySocket = gridAlly
+        if (turno == 1) {
+            io.to(lista[turno-1]).emit('update-ally', {gridAllySocket, gridEnemySocket});
+        }
+        else {
+            io.to(lista[turno+1]).emit('update-ally', {gridAllySocket, gridEnemySocket});
         }
     });
 

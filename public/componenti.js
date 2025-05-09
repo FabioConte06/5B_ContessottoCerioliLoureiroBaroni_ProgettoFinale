@@ -339,11 +339,11 @@ const partita = () => {
     const cols = 10;
     const cellSize = 50;
 
-    let gridAlly = Array.from({ length: rows }, () => Array(cols).fill(0));
-    let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
-
     return {
         setup: (turno, to, lista) => {
+            let gridAlly = Array.from({ length: rows }, () => Array(cols).fill(0));
+            let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
+
             function shuffle(array) {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -406,19 +406,23 @@ const partita = () => {
             placeShip(gridAlly, 2, 3); // Torpedinieri
             placeShip(gridAlly, 1, 4); // Sommergibili
 
-            socket.emit('enemy', { to, gridAlly })
-            socket.on('enemy-setup', ({ gridEnemySocket }) => {
-                gridEnemy = gridEnemySocket
-                
-            })
-            shuffle(lista);
-            socket.emit('start', { turno, lista })
+            socket.emit('enemy', { from: currentUser, lista, turno, gridAlly })
+
+            new Promise(resolve => {
+                socket.once('enemy-setup', ({ gridEnemySocket }) => {
+                    resolve(gridEnemySocket);
+                });
+            }).then(gridEnemy => {
+                console.log("nemici", gridEnemy);
+                shuffle(lista);
+                socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
+            })            
         },
 
-        game: (turno, lista) => {
-            console.log(gridAlly)
+        game: (gridAlly, gridEnemy, turno, lista) => {
+            console.log("game",gridAlly, gridEnemy)
+
             function drawGridAlly(ctx, grid) {
-                console.log("grigliaAlleata")
                 ctx.clearRect(0, 0, canvasAlly.width, canvasAlly.height);
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
@@ -460,12 +464,11 @@ const partita = () => {
             function aggiorna() {
                 console.log("update")
                 drawGridEnemy(ctxEnemy, gridEnemy)
-                socket.emit('update', { gridEnemy, turno, lista })
+                socket.emit('update', { gridAlly, gridEnemy, turno, lista })
                 turnoText.innerText = `Turno: Giocatore ${turno}`;
             }
-            
-            // Gestione del click sulla griglia
-            function gestisciClick(canvas, gridNemico) {
+
+            function handleCanvaClick(event) {
                 canvas.addEventListener('click', (event) => {
                     const rect = canvas.getBoundingClientRect();
                     const x = event.clientX - rect.left;
@@ -474,28 +477,67 @@ const partita = () => {
                     const i = Math.floor(y / cellSize);
             
                     if (i >= 0 && i < rows && j >= 0 && j < cols) {
-                        if (gridNemico[i][j] === 1) {
-                            gridNemico[i][j] = 2;
+                        if (gridEnemy[i][j] === 1) {
+                            gridEnemy[i][j] = 2;
                             aggiorna();
-                        } else if (gridNemico[i][j] === 0) {
-                            gridNemico[i][j] = 3;
+                        } else if (gridEnemy[i][j] === 0) {
+                            gridEnemy[i][j] = 3;
                             turno++;
                             if (turno == 2) {
                                 turno = 0;
                             }
+                            socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
                         }
                     }
                 });
             }
             
+            // Gestione del click sulla griglia
+            function creaGestoreClick(gridNemico) {
+                return function handleCanvasClick(event) {
+                    let canvas = canvasEnemy
+                    canvas = event.currentTarget;
+                    const rect = canvas.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    const j = Math.floor(x / cellSize);
+                    const i = Math.floor(y / cellSize);
+            
+                    if (i >= 0 && i < rows && j >= 0 && j < cols) {
+                        if (gridNemico[i][j] === 1) {
+                            console.log("colpito")
+                            gridNemico[i][j] = 2;
+                            aggiorna();
+
+                        } else if (gridNemico[i][j] === 0) {
+                            console.log("mancato")
+                            canvas.removeEventListener('click', handler);
+                            gridNemico[i][j] = 3;
+                            turno++;
+                            if (turno === 2) {
+                                turno = 0;
+                            }
+
+                        }
+                    }
+                };
+            }
+
             drawGridAlly(ctxAlly, gridAlly)
             drawGridEnemy(ctxEnemy, gridEnemy)
-            gestisciClick(canvasEnemy, gridEnemy);
+
+            const handler = creaGestoreClick(gridEnemy);
+            canvasEnemy.addEventListener('click', handler);            
         },
 
-        updateAlly: (gridEnemySocket) => {
+        updateAlly: (gridAllySocket, gridEnemySocket) => {
 
-            gridAlly = gridEnemySocket;
+            let gridEnemy = gridAllySocket;
+            let gridAlly = gridEnemySocket
+
+            console.log(gridEnemy)
+
+            console.log("update", gridAlly, gridEnemy)
 
             function drawGridAlly(ctx, grid) {
                 console.log("griglia")
@@ -517,9 +559,28 @@ const partita = () => {
                     }
                 }
             }
+
+            function drawGridEnemy(ctx, grid) {
+                console.log("griglia")
+                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        if (grid[i][j] === 2) {
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 3 && grid[i][j] === 1) {
+                            ctx.fillStyle = 'lightblue';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
             
             drawGridAlly(ctxAlly, gridAlly);
-        }
+            drawGridEnemy(ctxEnemy, gridEnemy)
+        },
     };
 };
 
@@ -559,12 +620,18 @@ socket.on('setup-game', ({ opponent, turno, lista }) => {
     game.setup(turno, opponent, lista);
 });
 
-socket.on('start-game', ({ turno, lista }) => {
+socket.on('start-game', ({ gridAlly, gridEnemy, turno, lista }) => {
     const game = partita();
-    game.game(turno, lista);
+    game.game(gridAlly, gridEnemy, turno, lista);
 });
 
-socket.on('update-ally', ({}) => {
+socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
     const game = partita();
-    game.updateAlly(gridEnemy)
+    game.updateAlly(gridAllySocket, gridEnemySocket)
 });
+
+socket.on('render-neutro', ({ gridAlly }) =>{
+    const game = partita();
+    game.render()
+})
+
