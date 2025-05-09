@@ -20,18 +20,10 @@ const websocket = () => {
         },
         receiveInvite: () => {
             socket.on('receive-invite', ({ from }) => {
-                console.log("socket invito")
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
                     socket.emit('accept-invite', { from, to: currentUser });
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Invito accettato! Inizia la partita.';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
+                    alert('Invito accettato! Inizia la partita.');
                 }
             });
         },
@@ -48,41 +40,13 @@ const inviti = () => {
         sendChatMessage: () => {
             const sendChatButton = document.getElementById('send-chat-button');
             const chatInput = document.getElementById('chat-input');
-
             sendChatButton.onclick = () => {
                 const message = chatInput.value.trim();
                 if (message) {
                     socket.emit('send-chat-message', { user: currentUser, message });
                     chatInput.value = '';
                 } else {
-                    const notifica = document.getElementById('notifica');
-                        notifica.textContent = 'Il messaggio non può essere vuoto.';
-                        notifica.classList.remove('hidden');
-                        notifica.classList.add('show');
-                        setTimeout(() => {
-                        notifica.classList.remove('show');
-                        setTimeout(() => notifica.classList.add('hidden'), 400);
-                        }, 3000);
-                }
-            };
-
-            chatInput.onkeydown = (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    const message = chatInput.value.trim();
-                    if (message) {
-                        socket.emit('send-chat-message', { user: currentUser, message });
-                        chatInput.value = '';
-                    } else {
-                        const notifica = document.getElementById('notifica');
-                        notifica.textContent = 'Il messaggio non può essere vuoto.';
-                        notifica.classList.remove('hidden');
-                        notifica.classList.add('show');
-                        setTimeout(() => {
-                        notifica.classList.remove('show');
-                        setTimeout(() => notifica.classList.add('hidden'), 400);
-                        }, 3000);
-                    }
+                    alert('Il messaggio non può essere vuoto.');
                 }
             };
         },
@@ -104,11 +68,12 @@ const inviti = () => {
                         }
                     }).join('');
 
+                    // Aggiungi gli event listener ai pulsanti "Invita"
                     const inviteButtons = document.querySelectorAll('.invite-button');
                     inviteButtons.forEach(button => {
                         button.onclick = () => {
                             const to = button.getAttribute('data-user');
-                            invite.sendInvite(to);
+                            invite.sendInvite(to); // Usa la funzione sendInvite
                         };
                     });
                 }
@@ -116,29 +81,40 @@ const inviti = () => {
         },
         sendInvite: (to) => {
             console.log(currentUser, to);
+            if (!currentUser) {
+                alert('Devi effettuare il login per inviare un invito.');
+                return;
+            }
             socket.emit('send-invite', { from: currentUser, to });
         },
         receiveInvite: () => {
             socket.on('receive-invite', ({ from }) => {
-                console.log("compnenti:", from)
                 const accept = confirm(`${from} ti ha invitato a giocare. Accetti?`);
                 if (accept) {
-                    console.log("accetta:", from)
                     socket.emit('accept-invite', { from, to: currentUser });
                 }
             });
         },
         inviteError: () => {
             socket.on('invite-error', ({ message }) => {
-                `La partita contro ${opponent} sta per iniziare!`
+                alert(message);
             });
         },
-        startGame: () => {}
+        startGame: () => {
+            socket.on('start-game', ({ opponent }) => {
+                alert(`La partita contro ${opponent} sta per iniziare!`);
+                showSection(gameSection);
+            });
+        }
     };
 };
 
 const login = () => {
     return {
+        showSection: (section) => {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+            section.classList.remove('hidden');
+        },
         login: async (username, password) => {
             try {
                 const response = await fetch('/login', {
@@ -149,17 +125,10 @@ const login = () => {
                 const data = await response.json();
                 if (data.success) {
                     currentUser = username;
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Login effettuato con successo!';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
+                    alert('Login effettuato con successo!');
                     const inviteSection = document.getElementById('invite-section');
-                    const loginForm = document.getElementById('login-form');
-                    loginForm.classList.add('hidden');
+                    const loginSection = document.getElementById('login-section');
+                    loginSection.classList.add('hidden');
                     inviteSection.classList.remove('hidden');
                     socket.emit('user-login', username);
                 } else {
@@ -171,56 +140,25 @@ const login = () => {
         },
         setup: () => {
             const loginButton = document.getElementById('login-button');
-            const goRegister = document.getElementById('go-to-register');
-            const loginForm = document.getElementById('login-form');
-
-            loginForm.onsubmit = (event) => {
-                event.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                if (username && password) {
-                    userLogin.login(username, password);
-                } else {
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Riempi tutti i campi.';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
-                }
-            };
-
             loginButton.onclick = () => {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 if (username && password) {
                     userLogin.login(username, password);
                 } else {
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Riempi tutti i campi.';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
+                    alert('Riempi tutti i campi.');
                 }
             };
-
-            goRegister.onclick = () => {
-                const loginForm = document.getElementById('login-form');
-                const registerForm = document.getElementById('register-form');
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-            }
         }
     };
 };
 
 const register = () => {
     return {
+        showSection: (section) => {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+            section.classList.remove('hidden');
+        },
         register: async (username, email) => {
             try {
                 const response = await fetch('/register', {
@@ -230,18 +168,8 @@ const register = () => {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Registrazione completata, controlla la tua email';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
-                    const loginForm = document.getElementById('login-form');
-                    const registerForm = document.getElementById('register-form');
-                    registerForm.classList.add('hidden');
-                    loginForm.classList.remove('hidden');
+                    alert('Registrazione completata! Controlla la tua email.');
+                    userRegister.showSection(document.getElementById('login-section'));
                 } else {
                     alert(data.message || 'Errore nella registrazione.');
                 }
@@ -251,50 +179,15 @@ const register = () => {
         },
         setup: () => {
             const registerButton = document.getElementById('register-button');
-            const registerForm = document.getElementById('register-form');
-
-            registerForm.onsubmit = (event) => {
-                event.preventDefault();
-                const username = document.getElementById('register-username').value;
-                const email = document.getElementById('register-email').value;
-                if (username && email) {
-                    userRegister.register(username, email);
-                } else {
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Riempi tutti i campi.';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
-                }
-            };
-
             registerButton.onclick = () => {
                 const username = document.getElementById('register-username').value;
                 const email = document.getElementById('register-email').value;
                 if (username && email) {
                     userRegister.register(username, email);
                 } else {
-                    const notifica = document.getElementById('notifica');
-                    notifica.textContent = 'Riempi tutti i campi.';
-                    notifica.classList.remove('hidden');
-                    notifica.classList.add('show');
-                    setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
-                    }, 3000);
+                    alert('Riempi tutti i campi.');
                 }
             };
-
-            const backLogin = document.getElementById('back-login');
-            backLogin.onclick = () => {
-                const loginForm = document.getElementById('login-form');
-                const registerForm = document.getElementById('register-form');
-                registerForm.classList.add('hidden');
-                loginForm.classList.remove('hidden');
-            }
         }
     };
 };
@@ -349,18 +242,3 @@ const game = partita();
 game.setup();
 
 export { websocket, inviti, login, register, partita };
-
-socket.on('start-game', ({ opponent }) => {
-    const notifica = document.getElementById('notifica');
-    notifica.textContent = `La partita contro ${opponent} sta per iniziare!`;
-    notifica.classList.remove('hidden');
-    notifica.classList.add('show');
-    setTimeout(() => {
-    notifica.classList.remove('show');
-    setTimeout(() => notifica.classList.add('hidden'), 400);
-    }, 3000);
-    const inviteSection = document.getElementById('invite-section');
-    const gameSection = document.getElementById('game-section');
-    inviteSection.classList.add('hidden');
-    gameSection.classList.remove('hidden');
-});
