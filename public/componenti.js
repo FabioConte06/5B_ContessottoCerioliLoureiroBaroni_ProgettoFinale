@@ -360,9 +360,6 @@ invite.receiveInvite();
 
 
 
-<<<<<<< HEAD
-export { websocket, inviti, login, register, partita };
-=======
 export { websocket, inviti, login, register, partita };
 
 socket.on('start-game', ({ opponent }) => {
@@ -382,4 +379,3 @@ socket.on('start-game', ({ opponent }) => {
     game.setup();
 });
 
->>>>>>> 443a4ebc9324bddbf7148c24531dd564f1e8ad83
