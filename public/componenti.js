@@ -640,6 +640,8 @@ const userRegister = register();
 userRegister.setup();
 
 const invite = inviti();
+invite.aggiornaGames();
+invite.gameBox();
 invite.updateUsers();
 invite.sendChatMessage();
 invite.receiveChatMessage();

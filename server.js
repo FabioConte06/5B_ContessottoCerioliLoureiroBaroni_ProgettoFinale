@@ -113,11 +113,15 @@ io.on('connection', (socket) => {
         }
         let turno = Math.floor(Math.random() * 2);
         if (fromSocketId) {
-            lista = [fromSocketId, socket.id]
+            const gioco = {
+                player1: from,
+                player2: to,
+                players: [fromSocketId, socket.id],
+            };
+            activeGames.push(gioco);
             console.log("inizializzazione", turno)
-            console.log("inizializzazione", lista)
-            io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
-            io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
+            io.to(fromSocketId).emit('setup-game', { opponent: to, turno });
+            io.to(socket.id).emit('setup-game', { opponent: from, turno });
         }
     });
 
@@ -196,6 +200,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
+        const index=activeGames.findIndex((game) => game.players.includes(socket.id));
+        if (index !== -1) {
+            activeGames.splice(index, 1);
+            io.emit('update-games', activeGames);
+        }
         delete onlineUsers[socket.id];
         console.log('Utenti online dopo disconnessione:', onlineUsers);
         io.emit('update-users', Object.values(onlineUsers));
