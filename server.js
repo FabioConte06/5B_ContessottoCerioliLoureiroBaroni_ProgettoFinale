@@ -115,7 +115,8 @@ io.on('connection', (socket) => {
     if (fromSocketId) {
         const lista = [fromSocketId, socket.id];
         activeGames.push({ player1: from, player2: to, lista });
-        io.emit('update-games', activeGames); // Notifica i client delle partite attive
+        io.emit('update-games', activeGames);
+        io.emit('update-users', Object.values(onlineUsers));
         io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
         io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
     }

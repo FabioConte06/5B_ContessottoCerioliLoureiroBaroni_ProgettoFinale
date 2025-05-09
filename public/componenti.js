@@ -144,9 +144,8 @@ const inviti = () => {
                 userList.innerHTML = users.map(user => {
                     let inGame = false;
 
-                    for (let i = 0; i < activeGames.length; i++) {
-                        const game = activeGames[i];
-                        if (game.players.includes(user) && game.players.includes(currentUser)) {
+                    for (const game of activeGames) {
+                        if (game.player1 === user || game.player2 === user) {
                             inGame = true;
                             break;
                         }
@@ -155,7 +154,7 @@ const inviti = () => {
                     if (user === currentUser) {
                         return `<li>${user} (Tu)</li>`;
                     } else if (inGame) {
-                        return `<li>${user} (In partita)</li>`;
+                        return `<li>${user} (in partita)</li>`;
                     } else {
                         return `<li>${user} <button class="invite-button" data-user="${user}">Invita</button></li>`;
                     }
@@ -166,12 +165,12 @@ const inviti = () => {
                     button.onclick = () => {
                         const to = button.getAttribute('data-user');
                         invite.sendInvite(to);
-                    };
+                        };
                     });
                 });
-                }
-            });
-        },
+            }
+        });
+},
         sendInvite: (to) => {
             console.log(currentUser, to);
             socket.emit('send-invite', { from: currentUser, to });
@@ -677,12 +676,6 @@ socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
     game.updateAlly(gridAllySocket, gridEnemySocket)
 });
 
-socket.on('turno-over', ({ gridAlly, gridEnemy, lista, turno }) => {
-    turno = (turno + 1) % 2;
-    io.to(lista[turno]).emit('turno', { gridAlly, gridEnemy, turno, lista });
-});
-
-socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) => {
-    const game = partita();
-    game.game(gridAlly, gridEnemy, turno, lista);
-});
+socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
+    socket.emit('start', { from:currentUser, gridAlly, gridEnemy, turno, lista })
+})
