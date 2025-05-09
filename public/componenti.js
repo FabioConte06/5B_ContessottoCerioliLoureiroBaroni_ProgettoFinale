@@ -298,14 +298,21 @@ const register = () => {
 };
 
 const partita = () => {
+    const canvasAlly = document.getElementById('canvas1');
+    const canvasEnemy = document.getElementById('canvas2');
+    const ctxAlly = canvasAlly.getContext('2d');
+    const ctxEnemy = canvasEnemy.getContext('2d');
+    const turnoText = document.getElementById('turno');
+
+    const rows = 10;
+    const cols = 10;
+    const cellSize = 50;
+
+    let gridAlly = Array.from({ length: rows }, () => Array(cols).fill(0));
+    let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
+
     return {
-        setup: (turno) => {
-            const rows = 10;
-            const cols = 10;
-
-            let gridAlly = Array.from({ length: rows }, () => Array(cols).fill(0));
-            let gridEnemy = Array.from({ length: rows }, () => Array(cols).fill(0));
-
+        setup: (turno, to, lista) => {
             function shuffle(array) {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -368,31 +375,20 @@ const partita = () => {
             placeShip(gridAlly, 2, 3); // Torpedinieri
             placeShip(gridAlly, 1, 4); // Sommergibili
 
-            socket.emit('enemy', { to: currentUser, gridAlly });
+            socket.emit('enemy', { to, gridAlly })
             socket.on('enemy-setup', ({ gridEnemySocket }) => {
                 gridEnemy = gridEnemySocket
                 
             })
-            socket.emit('start', { from, gridAlly, gridEnemy, turno });
+            shuffle(lista);
+            socket.emit('start', { turno, lista })
         },
-        game: (gridAlly, gridEnemy) => {
-            const canvasAlly = document.getElementById('canvas1');
-            const canvasEnemy = document.getElementById('canvas2');
-            const ctxAlly = canvasAlly.getContext('2d');
-            const ctxEnemy = canvasEnemy.getContext('2d');
-            const turnoText = document.getElementById('turno');
-            const nextTurn = document.getElementById('nextTurn');
-            const form = document.getElementById('form');
-            const overlay = document.getElementById('overlay');
 
-            const cellSize = 50;
-
-            socket.on('enemy-setup', ({ gridAlly, gridEnemy, turno }) => {})
-
-            // Disegna la griglia
-            function drawGrid(ctx, grid, hideShips) {
-                console.log("griglia")
-                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+        game: (turno, lista) => {
+            console.log(gridAlly)
+            function drawGridAlly(ctx, grid) {
+                console.log("grigliaAlleata")
+                ctx.clearRect(0, 0, canvasAlly.width, canvasAlly.height);
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
                         ctx.strokeStyle = 'black';
@@ -403,8 +399,26 @@ const partita = () => {
                         } else if (grid[i][j] === 3) {
                             ctx.fillStyle = 'lightblue';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                        } else if (grid[i][j] === 1 && !hideShips) {
+                        } else if (grid[i][j] === 1) {
                             ctx.fillStyle = 'gray';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+
+            function drawGridEnemy(ctx, grid) {
+                console.log("griglia")
+                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        if (grid[i][j] === 2) {
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 3 && grid[i][j] === 1) {
+                            ctx.fillStyle = 'lightblue';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                         }
                     }
@@ -414,16 +428,9 @@ const partita = () => {
             // Aggiorna la griglia
             function aggiorna() {
                 console.log("update")
-                drawGrid(ctxAlly, gridAlly, turno !== 1);
-                drawGrid(ctxEnemy, gridEnemy, turno !== 2);
+                drawGridEnemy(ctxEnemy, gridEnemy)
+                socket.emit('update', { gridEnemy, turno, lista })
                 turnoText.innerText = `Turno: Giocatore ${turno}`;
-            }
-            
-            nextTurn.onclick = function() {
-                console.log("click")
-                aggiorna();
-                form.style.display = "none"
-                overlay.style.display = "none"
             }
             
             // Gestione del click sulla griglia
@@ -441,17 +448,46 @@ const partita = () => {
                             aggiorna();
                         } else if (gridNemico[i][j] === 0) {
                             gridNemico[i][j] = 3;
-                            turno = turno === 1 ? 2 : 1;
-                            form.style.display = "inline";
-                            overlay.style.display = "inline";
+                            turno++;
+                            if (turno == 2) {
+                                turno = 0;
+                            }
                         }
                     }
                 });
             }
             
-            gestisciClick(canvasAlly, gridAlly);
+            drawGridAlly(ctxAlly, gridAlly)
+            drawGridEnemy(ctxEnemy, gridEnemy)
             gestisciClick(canvasEnemy, gridEnemy);
-            aggiorna();
+        },
+
+        updateAlly: (gridEnemySocket) => {
+
+            gridAlly = gridEnemySocket;
+
+            function drawGridAlly(ctx, grid) {
+                console.log("griglia")
+                ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        if (grid[i][j] === 2) {
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 3) {
+                            ctx.fillStyle = 'lightblue';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        } else if (grid[i][j] === 1) {
+                            ctx.fillStyle = 'gray';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+            
+            drawGridAlly(ctxAlly, gridAlly);
         }
     };
 };
@@ -475,7 +511,7 @@ invite.receiveInvite();
 
 export { websocket, inviti, login, register, partita };
 
-socket.on('setup-game', ({ opponent, turno }) => {
+socket.on('setup-game', ({ opponent, turno, lista }) => {
     const notifica = document.getElementById('notifica');
     notifica.textContent = `La partita contro ${opponent} sta per iniziare!`;
     notifica.classList.remove('hidden');
@@ -489,10 +525,15 @@ socket.on('setup-game', ({ opponent, turno }) => {
     inviteSection.classList.add('hidden');
     gameSection.classList.remove('hidden');
     const game = partita();
-    game.setup(turno);
+    game.setup(turno, opponent, lista);
 });
 
-socket.on('start-game', ({ opponent }) => {
+socket.on('start-game', ({ turno, lista }) => {
     const game = partita();
-    game.game();
+    game.game(turno, lista);
+});
+
+socket.on('update-ally', ({}) => {
+    const game = partita();
+    game.updateAlly(gridEnemy)
 });

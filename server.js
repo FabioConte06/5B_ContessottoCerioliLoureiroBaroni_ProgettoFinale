@@ -114,8 +114,9 @@ io.on('connection', (socket) => {
         }
         let turno = Math.floor(Math.random() * 2);
         if (fromSocketId) {
-            io.to(fromSocketId).emit('setup-game', { opponent: to, turno });
-            io.to(socket.id).emit('setup-game', { opponent: from, turno });
+            lista = [fromSocketId, socket.id]
+            io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
+            io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
         }
     });
 
@@ -133,17 +134,18 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('start', ({ from, gridAlly, gridEnemy, turno }) => {
-        let destinationSocketId = null;
-
-        for (const id in onlineUsers) {
-            if (onlineUsers[id] === from) {
-                destinationSocketId = id;
-                break;
-            }
+    socket.on('start', ({ from, to, gridAlly, gridEnemy, turno, lista }) => {
+        if (lista[turno]) {
+            io.to(lista[turno]).emit('start-game', { from, to, gridAlly, gridEnemy, turno, lista });
         }
-        if (destinationSocketId) {
-            io.to(destinationSocketId).emit('start-game', { gridAlly, gridEnemy, turno });
+    });
+
+    socket.on('update', ({ gridEnemy, turno, lista }) => {
+        if (turno == 1) {
+            io.to(lista[turno-1]).emit('update-ally', {gridEnemy});
+        }
+        else {
+            io.to(lista[turno+1]).emit('update-ally', {gridEnemy});
         }
     });
 
