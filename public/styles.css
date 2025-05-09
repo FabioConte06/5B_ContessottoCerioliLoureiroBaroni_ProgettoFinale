@@ -21,8 +21,13 @@
     margin-bottom: 20px;
     color: #58a6ff;
   }
+
+  #canva {
+    display: flex;
+    gap: 20px; /* Spazio tra i canvas, modificabile */
+  }
   
-  #login-form, #register-form, #invite-section, #game-section {
+  #login-form, #register-form, #invite-section {
     background-color: #1f2937;
     padding: 30px;
     border-radius: 15px;
@@ -44,7 +49,7 @@
     }
   }
   
-  input, button {
+  input, #register-button, #login-button, #send-chat-button {
     width: 90%;
     margin: 10px auto;
     padding: 12px;
@@ -92,7 +97,7 @@
   .invite-button {
     background-color: #58a6ff;
     border: none;
-    padding: 5px 10px;
+    padding: 5px 5px;
     border-radius: 5px;
     color: white;
     cursor: pointer;
