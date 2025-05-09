@@ -541,20 +541,21 @@ const partita = () => {
             
             // Gestione del click sulla griglia
             function creaGestoreClick(gridNemico) {
-                return function handleCanvasClick(event) {
-                    const rect = canvasEnemy.getBoundingClientRect();
-                    const x = event.clientX - rect.left;
-                    const y = event.clientY - rect.top;
-                    const j = Math.floor(x / cellSize);
-                    const i = Math.floor(y / cellSize);
+    return function handleCanvasClick(event) {
+        const rect = canvasEnemy.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const j = Math.floor(x / cellSize);
+        const i = Math.floor(y / cellSize);
 
-                    if (i >= 0 && i < rows && j >= 0 && j < cols) {
-                        if (gridNemico[i][j] === 1 || gridNemico[i][j] === 0) {
-                            socket.emit('update', { gridAlly, gridEnemy, turno, lista, i, j });
-                        }
-                    }
-                };
+        if (i >= 0 && i < rows && j >= 0 && j < cols) {
+            if (gridNemico[i][j] === 1 || gridNemico[i][j] === 0) {
+                // Invia l'aggiornamento al server
+                socket.emit('update', { gridAlly, gridEnemy, turno, lista, i, j });
             }
+        }
+    };
+}
 
             drawGridAlly(ctxAlly, gridAlly)
             drawGridEnemy(ctxEnemy, gridEnemy)
@@ -632,8 +633,6 @@ invite.sendChatMessage();
 invite.receiveChatMessage();
 invite.receiveInvite();
 
-
-
 export { websocket, inviti, login, register, partita };
 
 socket.on('setup-game', ({ opponent, turno, lista }) => {
@@ -658,9 +657,12 @@ socket.on('start-game', ({ gridAlly, gridEnemy, turno, lista }) => {
     game.game(gridAlly, gridEnemy, turno, lista);
 });
 
-socket.on('update-ally', ({ gridAllySocket, gridEnemySocket }) => {
+socket.on('update-ally', ({ gridAllySocket, gridEnemySocket, currentPlayer }) => {
     const game = partita();
-    game.updateAlly(gridAllySocket, gridEnemySocket)
+    game.updateAlly(gridAllySocket, gridEnemySocket);
+
+    const turnoText = document.getElementById('turno');
+    turnoText.innerText = `Turno: ${currentPlayer}`;
 });
 
 socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{

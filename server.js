@@ -111,6 +111,7 @@ io.on('connection', (socket) => {
             break;
         }
     }
+    
     let turno = Math.floor(Math.random() * 2);
     if (fromSocketId) {
         const lista = [fromSocketId, socket.id];
@@ -119,6 +120,9 @@ io.on('connection', (socket) => {
         io.emit('update-users', Object.values(onlineUsers));
         io.to(fromSocketId).emit('setup-game', { opponent: to, turno, lista });
         io.to(socket.id).emit('setup-game', { opponent: from, turno, lista });
+        console.log("fromSocketId:", fromSocketId);
+console.log("socket.id:", socket.id);
+console.log("lista:", lista);
     }
 });
 
@@ -134,7 +138,8 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-
+        console.log(destinationSocketId, lista[turno])
+        console.log(turno)
         if (lista[turno] == destinationSocketId) {
             if (turno == 0) {
                 io.to(lista[turno+1]).emit('enemy-setup', { gridEnemySocket });
@@ -164,6 +169,7 @@ io.on('connection', (socket) => {
         }
 
         console.log(destinationSocketId, lista[turno])
+        console.log(turno)
 
         if (lista[turno] == destinationSocketId) {
             io.to(lista[turno]).emit('start-game', { gridAlly, gridEnemy, turno, lista });
@@ -174,44 +180,47 @@ io.on('connection', (socket) => {
     });
 
     socket.on('update', ({ gridAlly, gridEnemy, turno, lista, i, j }) => {
-        const nextTurn = (turno + 1) % lista.length;
-        const currentPlayer = onlineUsers[lista[nextTurn]];
+    const nextTurn = (turno + 1) % lista.length;
+    const currentPlayer = onlineUsers[lista[nextTurn]];
 
-        let resultMessage = '';
-        if (gridEnemy[i][j] === 1) {
-            gridEnemy[i][j] = 2;
-            resultMessage = `${onlineUsers[lista[turno]]} ha colpito una nave!`;
-        } else if (gridEnemy[i][j] === 0) {
-            gridEnemy[i][j] = 3;
-            resultMessage = `${onlineUsers[lista[turno]]} ha mancato il bersaglio.`;
-        }
+    let resultMessage = '';
+    if (gridEnemy[i][j] === 1) {
+        gridEnemy[i][j] = 2;
+        resultMessage = `${onlineUsers[lista[turno]]} ha colpito una nave!`;
+    } else if (gridEnemy[i][j] === 0) {
+        gridEnemy[i][j] = 3;
+        resultMessage = `${onlineUsers[lista[turno]]} ha mancato il bersaglio.`;
+    }
 
-            const allShipsDestroyed = (grid) => {
-                for (let row = 0; row < grid.length; row++) {
-                    for (let col = 0; col < grid[row].length; col++) {
-                        if (grid[row][col] === 1) {
-                            return false;
-                        }
-                    }
+    // Verifica se tutte le navi sono distrutte
+    const allShipsDestroyed = (grid) => {
+        for (let row = 0; row < grid.length; row++) {
+            for (let col = 0; col < grid[row].length; col++) {
+                if (grid[row][col] === 1) {
+                    return false; // C'è ancora una nave
                 }
-                return true;
-            };
-
-            if (allShipsDestroyed(gridEnemy)) {
-                const winner = onlineUsers[lista[turno]];
-                io.emit('game-event', { message: `${winner} ha vinto la battaglia!` });
-
-                setTimeout(() => {
-                    io.to(lista[0]).emit('end-game');
-                    io.to(lista[1]).emit('end-game');
-                }, 5000);
-                return;
             }
+        }
+        return true; // Tutte le navi sono distrutte
+    };
 
-            io.to(lista[nextTurn]).emit('update-ally', { gridAllySocket: gridAlly, gridEnemySocket: gridEnemy, currentPlayer });
-            io.emit('turno', { turno: nextTurn, currentPlayer });
-            io.emit('game-event', { message: resultMessage });
-        });
+    if (allShipsDestroyed(gridEnemy)) {
+        const winner = onlineUsers[lista[turno]];
+        io.emit('game-event', { message: `${winner} ha vinto la battaglia!` });
+
+        // Dopo 5 secondi, reindirizza entrambi i giocatori alla sezione degli inviti
+        setTimeout(() => {
+            io.to(lista[0]).emit('end-game');
+            io.to(lista[1]).emit('end-game');
+        }, 5000);
+        return;
+    }
+
+    // Invia l'aggiornamento al prossimo giocatore
+    io.to(lista[nextTurn]).emit('update-ally', { gridAllySocket: gridAlly, gridEnemySocket: gridEnemy, currentPlayer });
+    io.emit('turno', { turno: nextTurn, currentPlayer });
+    io.emit('game-event', { message: resultMessage });
+});
 
     socket.on('active-games', (data, callback) => {
         callback(activeGames);
