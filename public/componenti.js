@@ -663,48 +663,6 @@ const partita = () => {
                 }, 1000);
             }
 
-            function handleCanvasClick(event) {
-
-                if (socket.id !== lista[turno]) {
-                    showTemporaryMessage("Non è il tuo turno!", 5000);
-                    return;
-                }
-
-                const rect = canvasEnemy.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-                const j = Math.floor(x / cellSize);
-                const i = Math.floor(y / cellSize);
-
-                if (i >= 0 && i < rows && j >= 0 && j < cols) {
-                    if (gridEnemy[i][j] === 1) {
-                        gridEnemy[i][j] = 2; // Colpito
-                        showTemporaryMessage("Hai colpito una nave!", 5000);
-
-                        // Resetta il timer
-                        clearInterval(timer);
-                        timeLeft = 15;
-                        startTimer();
-
-                        if (checkVictory(gridEnemy)) {
-                            showTemporaryMessage("Hai vinto la battaglia!", 5000);
-                            socket.emit('victory', { winner: currentUser, lista });
-
-                            // Torna alla lobby
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 5000);
-                            return;
-                        }
-                    } else if (gridEnemy[i][j] === 0) {
-                        gridEnemy[i][j] = 3; // Mancato
-                        showTemporaryMessage("Hai mancato il colpo!", 5000);
-                        endTurn();
-                    }
-                    drawGridEnemy(ctxEnemy, gridEnemy);
-                }
-            }
-
             function showTemporaryMessage(message, duration) {
                 gameBox.innerHTML = `<div>${message}</div>`;
                 setTimeout(() => {
@@ -737,7 +695,26 @@ const partita = () => {
                         startTimer();
 
                         if (checkVictory(gridEnemy)) {
-                            showTemporaryMessage("Hai vinto la battaglia!", 5000);
+                            if (checkVictory(gridEnemy)) {
+                                const winnerSocketId = socket.id;
+                                const loserSocketId = lista.find(id => id !== winnerSocketId);
+                                socket.emit('victory', { winner: currentUser, lista });
+    
+                                if (socket.id === winnerSocketId) {
+                                    showTemporaryMessage('Hai vinto! Tornerai alla lobby tra 5 secondi.', 50000);
+                                };
+                                if (loserSocketId) {
+                                    showTemporaryMessage('Hai perso! Tornerai alla lobby tra 5 secondi.', 50000);
+                                };
+                                
+                                setTimeout(() => {
+                                    const gameSection = document.getElementById('game-section');
+                                    const inviteSection = document.getElementById('invite-section');
+                                    gameSection.classList.add('hidden');
+                                    inviteSection.classList.remove('hidden');
+                                }, 5000);
+                                return;
+                            }
                             socket.emit('victory', { winner: currentUser, lista });
 
                             // Torna alla lobby senza ricaricare la pagina
