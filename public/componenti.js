@@ -365,19 +365,26 @@ const register = () => {
                 }
             };
 
-            registerButton.onclick = () => {
+            registerButton.onclick = async () => {
                 const username = document.getElementById('register-username').value;
                 const email = document.getElementById('register-email').value;
+                const notifica = document.getElementById('notifica');
+
                 if (username && email) {
-                    userRegister.register(username, email);
+                    registerButton.disabled = true;
+                    try {
+                        await userRegister.register(username, email);
+                    } catch (error) {
+                        console.error('Errore durante la registrazione:', error);
+                    }
+                    registerButton.disabled = false;
                 } else {
-                    const notifica = document.getElementById('notifica');
                     notifica.textContent = 'Riempi tutti i campi.';
                     notifica.classList.remove('hidden');
                     notifica.classList.add('show');
                     setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
                     }, 3000);
                 }
             };
