@@ -234,15 +234,15 @@ const login = () => {
                     body: JSON.stringify({ username, password })
                 });
                 const data = await response.json();
+                const notifica = document.getElementById('notifica');
                 if (data.success) {
                     currentUser = username;
-                    const notifica = document.getElementById('notifica');
                     notifica.textContent = 'Login effettuato con successo!';
                     notifica.classList.remove('hidden');
                     notifica.classList.add('show');
                     setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 4000);
                     }, 3000);
                     const inviteSection = document.getElementById('invite-section');
                     const loginForm = document.getElementById('login-form');
@@ -250,10 +250,23 @@ const login = () => {
                     inviteSection.classList.remove('hidden');
                     socket.emit('user-login', username);
                 } else {
-                    alert(data.message || 'Login fallito.');
+                    notifica.textContent = data.message || 'Credenziali non valide.';
+                    notifica.classList.remove('hidden');
+                    notifica.classList.add('show');
+                    setTimeout(() => {
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
+                    }, 3000);
                 }
             } catch (error) {
-                alert('Errore di rete.');
+                const notifica = document.getElementById('notifica');
+                notifica.textContent = 'Errore di rete. Riprova più tardi.';
+                notifica.classList.remove('hidden');
+                notifica.classList.add('show');
+                setTimeout(() => {
+                    notifica.classList.remove('show');
+                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                }, 3000);
             }
         },
         setup: () => {
@@ -279,19 +292,54 @@ const login = () => {
                 }
             };
 
-            loginButton.onclick = () => {
+            loginButton.onclick = async () => {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
+                const notifica = document.getElementById('notifica');
+
                 if (username && password) {
-                    userLogin.login(username, password);
+                    try {
+                        const response = await fetch('/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username, password })
+                        });
+                        const data = await response.json();
+
+                        if (data.success) {
+                            notifica.textContent = 'Login effettuato con successo!';
+                            notifica.classList.remove('hidden');
+                            notifica.classList.add('show');
+                            setTimeout(() => {
+                                notifica.classList.remove('show');
+                                setTimeout(() => notifica.classList.add('hidden'), 400);
+                            }, 3000);
+                        } else {
+                            notifica.textContent = data.message || 'Errore durante il login.';
+                            notifica.classList.remove('hidden');
+                            notifica.classList.add('show');
+                            setTimeout(() => {
+                                notifica.classList.remove('show');
+                                setTimeout(() => notifica.classList.add('hidden'), 400);
+                            }, 3000);
+                        }
+                    } catch (error) {
+                        console.error('Errore di rete:', error);
+                        notifica.textContent = 'Errore di rete. Riprova più tardi.';
+                        notifica.classList.remove('hidden');
+                        notifica.classList.add('show');
+                        setTimeout(() => {
+                            notifica.classList.remove('show');
+                            setTimeout(() => notifica.classList.add('hidden'), 400);
+                        }, 3000);
+                    }
                 } else {
-                    const notifica = document.getElementById('notifica');
                     notifica.textContent = 'Riempi tutti i campi.';
                     notifica.classList.remove('hidden');
                     notifica.classList.add('show');
                     setTimeout(() => {
-                    notifica.classList.remove('show');
-                    setTimeout(() => notifica.classList.add('hidden'), 400);
+                        notifica.classList.remove('show');
+                        setTimeout(() => notifica.classList.add('hidden'), 400);
                     }, 3000);
                 }
             };
