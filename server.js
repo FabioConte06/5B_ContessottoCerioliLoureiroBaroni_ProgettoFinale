@@ -381,13 +381,10 @@ io.on('connection', (socket) => {
 
     socket.on('victory', ({ winner, lista }) => {
     const loser = lista.find(id => id !== socket.id);
-    console.log("vincitore")
-    console.log(loser, winner)
-    console.log("controllo vincitore")
-    console.log(loser, socket.id)
 
-    io.to(lista[0]).emit('game-over', { message: `${winner} ha vinto la battaglia!` });
-    io.to(lista[1]).emit('game-over', { message: `${winner} ha vinto la battaglia!` });
+    io.to(socket.id).emit('game-over', { message: `Complimenti ${winner}, hai vinto la battaglia!` });
+
+    io.to(loser).emit('game-over', { message: `Mi dispiace, hai perso la battaglia contro ${winner}.` });
 
     for (let i = activeGames.length - 1; i >= 0; i--) {
         if (activeGames[i].player1 === winner || activeGames[i].player2 === winner) {
