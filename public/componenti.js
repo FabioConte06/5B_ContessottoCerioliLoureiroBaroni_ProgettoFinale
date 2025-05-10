@@ -695,26 +695,6 @@ const partita = () => {
                         startTimer();
 
                         if (checkVictory(gridEnemy)) {
-                            if (checkVictory(gridEnemy)) {
-                                const winnerSocketId = socket.id;
-                                const loserSocketId = lista.find(id => id !== winnerSocketId);
-                                socket.emit('victory', { winner: currentUser, lista });
-    
-                                if (socket.id === winnerSocketId) {
-                                    showTemporaryMessage('Hai vinto! Tornerai alla lobby tra 5 secondi.', 50000);
-                                };
-                                if (loserSocketId) {
-                                    showTemporaryMessage('Hai perso! Tornerai alla lobby tra 5 secondi.', 50000);
-                                };
-                                
-                                setTimeout(() => {
-                                    const gameSection = document.getElementById('game-section');
-                                    const inviteSection = document.getElementById('invite-section');
-                                    gameSection.classList.add('hidden');
-                                    inviteSection.classList.remove('hidden');
-                                }, 5000);
-                                return;
-                            }
                             socket.emit('victory', { winner: currentUser, lista });
 
                             // Torna alla lobby senza ricaricare la pagina
