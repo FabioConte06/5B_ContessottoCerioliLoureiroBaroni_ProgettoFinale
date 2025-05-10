@@ -626,7 +626,7 @@ const partita = () => {
             }
 
             function checkVictory(grid) {
-                return grid.flat().every(cell => cell !== 1); // Nessuna nave rimasta
+                return grid.flat().every(cell => cell !== 1);
             }
 
             let currentTurn = false;
@@ -713,7 +713,6 @@ const partita = () => {
             }
 
             function handleCanvasClick(event) {
-                // Controlla se è il turno del giocatore corrente
                 if (socket.id !== lista[turno]) {
                     return;
                 }
@@ -737,10 +736,8 @@ const partita = () => {
                         startTimer();
 
                         if (checkVictory(gridEnemy)) {
-                            showTemporaryMessage("Hai vinto la battaglia!", 5000);
                             socket.emit('victory', { winner: currentUser, lista });
-
-                            // Torna alla lobby senza ricaricare la pagina
+                            
                             setTimeout(() => {
                                 const gameSection = document.getElementById('game-section');
                                 const inviteSection = document.getElementById('invite-section');
@@ -926,7 +923,17 @@ socket.on('turno', ({ gridAlly, gridEnemy, turno, lista }) =>{
 })
 
 socket.on('game-over', ({ message }) => {
+    const notifica = document.getElementById('notifica');
+    notifica.textContent = message;
+    notifica.classList.remove('hidden');
+    notifica.classList.add('show');
 
+    setTimeout(() => {
+        notifica.classList.remove('show');
+        setTimeout(() => notifica.classList.add('hidden'), 5000);
+    }, 5000);
+
+    // Torna alla lobby dopo 5 secondi
     setTimeout(() => {
         const gameSection = document.getElementById('game-section');
         const inviteSection = document.getElementById('invite-section');
