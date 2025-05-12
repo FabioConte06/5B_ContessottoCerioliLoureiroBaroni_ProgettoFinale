@@ -157,10 +157,16 @@ io.on('connection', (socket) => {
     socket.on('user-login', (username) => {
 
         onlineUsers[socket.id] = username;
+        for(let i = activeGames.length - 1; i >= 0; i--) {
+            if (activeGames[i].player1 === username || activeGames[i].player2 === username) {
+                activeGames.splice(i, 1);
+            }
+        }
 
         console.log('Utenti online:', onlineUsers);
 
         io.emit('update-users', Object.values(onlineUsers));
+        io.emit('update-games', activeGames);
 
     });
 
