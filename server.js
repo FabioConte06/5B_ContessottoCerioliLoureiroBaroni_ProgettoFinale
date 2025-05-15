@@ -421,26 +421,35 @@ socket.on('utenti', (from, lista, turno) => {
 
 
     socket.on('disconnect', () => {
-    const utenteDisc = onlineUsers[socket.id]
-    delete onlineUsers[socket.id];
-    console.log('Utenti online dopo disconnessione:', onlineUsers);
-
-    for (let i = activeGames.length - 1; i >= 0; i--) {
-        if (activeGames[i].player1 != onlineUsers[socket.id]) {
-
-            io.to(activeGames[i].player1).emit('game-over', { message: `Hai vinto a tavolino!` });
-            activeGames.splice(socket.id, 1);
+        const invertito ={};
+        for (const [chiave,valore] of Object.entries(onlineUsers)) {
+            invertito[valore] = chiave;
         }
-        else if (activeGames[i].player2 != onlineUsers[socket.id]) {
-            io.to(activeGames[i].player2).emit('game-over', { message: `Hai vinto a tavolino!` });
-            activeGames.splice(socket.id, 1);
-        }
+        for (let i = activeGames.length - 1; i >= 0; i--) {
+            if(activeGames[i].player1 == onlineUsers[socket.id] || activeGames[i].player2 == onlineUsers[socket.id]) {
+                if (activeGames[i].player1 == onlineUsers[socket.id]) {
+                    console.log(invertito);
+                    console.log(activeGames[i].player2);
+                    console.log(activeGames[i].player1);
+                    io.to(invertito[activeGames[i].player2]).emit('game-over', { message: `Hai vinto a tavolino!` });
+                    activeGames.splice(socket.id, 1);
+                }
+                else if (activeGames[i].player2 == onlineUsers[socket.id]) {
+                    console.log(invertito);
+                    console.log(activeGames[i].player2);
+                    console.log(activeGames[i].player1);
+                    io.to(invertito[activeGames[i].player1]).emit('game-over', { message: `Hai vinto a tavolino!` });
+                    activeGames.splice(socket.id, 1);
+                }
         
-    }
-
-    io.emit('update-users', Object.values(onlineUsers)); // Aggiorna la lista degli utenti
-    io.emit('update-games', activeGames); // Aggiorna la lista delle partite
-});
+            }        
+        }
+        const utenteDisc = onlineUsers[socket.id]
+        delete onlineUsers[socket.id];
+        console.log('Utenti online dopo disconnessione:', onlineUsers);
+        io.emit('update-users', Object.values(onlineUsers)); // Aggiorna la lista degli utenti
+        io.emit('update-games', activeGames); // Aggiorna la lista delle partite
+    });
 
 });
 
