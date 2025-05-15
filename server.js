@@ -58,6 +58,15 @@ async function createTransporter() {
 
 }
 
+app.post('/svuota', async (req, res) => {
+    try {
+        await database.svuota();
+        res.json({ success: true, message: 'Database svuotato con successo.' });
+    } catch (err) {
+        console.error('Errore durante lo svuotamento:', err);
+        res.status(500).json({ success: false, message: 'Errore nello svuotare il database.' });
+    }
+});
 
 
 const inviaEmail = async (body, password) => {
@@ -444,7 +453,6 @@ socket.on('utenti', (from, lista, turno) => {
         
             }        
         }
-        const utenteDisc = onlineUsers[socket.id]
         delete onlineUsers[socket.id];
         console.log('Utenti online dopo disconnessione:', onlineUsers);
         io.emit('update-users', Object.values(onlineUsers)); // Aggiorna la lista degli utenti

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
 const conf = JSON.parse(fs.readFileSync('conf.json'));
 conf.ssl = {
     ca: fs.readFileSync(__dirname + '/ca.pem')
@@ -40,14 +41,40 @@ const database = {
         if (existingEmail.length > 0) {
             throw new Error('Email già registrata.');
         }
-        const sql = `INSERT INTO users (username, email, password) VALUES ('${username}', '${email}', '${password}')`;
+
+        const hash = await bcrypt.hash(password, 10);
+        console.log('Hash:', hash);
+
+        const sql = `INSERT INTO users (username, email, password) VALUES ('${username}', '${email}', '${hash}')`;
         return executeQuery(sql);
     },
+
     login: async (username, password) => {
-        const sql = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+
+        // 1. Trova l'utente con quel username
+        const sql = `SELECT * FROM users WHERE username = '${username}'`;
         const result = await executeQuery(sql);
-        return result.length > 0 ? result[0] : null;
+
+        // 2. Se non esiste, return null
+        if (result.length === 0) {
+            return null;
+        }
+
+        const user = result[0];
+
+        // 3. Confronta la password inserita con l'hash salvato
+        const isCorrect = await bcrypt.compare(password, user.password);
+
+        console.log('Password corretta?', isCorrect);
+
+        // 4. Se la password è corretta, ritorna l'utente
+        return isCorrect ? user : null;
     },
+
+    svuota: async () => {
+        const sql = `TRUNCATE TABLE users`;
+        return executeQuery(sql)
+    }
 };
 
 module.exports = database;
