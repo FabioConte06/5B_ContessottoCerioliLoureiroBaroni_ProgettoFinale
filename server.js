@@ -421,13 +421,21 @@ socket.on('utenti', (from, lista, turno) => {
 
 
     socket.on('disconnect', () => {
+    const utenteDisc = onlineUsers[socket.id]
     delete onlineUsers[socket.id];
     console.log('Utenti online dopo disconnessione:', onlineUsers);
 
     for (let i = activeGames.length - 1; i >= 0; i--) {
-        if (activeGames[i].player1 === onlineUsers[socket.id] || activeGames[i].player2 === onlineUsers[socket.id]) {
-            activeGames.splice(i, 1);
+        if (activeGames[i].player1 != onlineUsers[socket.id]) {
+
+            io.to(activeGames[i].player1).emit('game-over', { message: `Hai vinto a tavolino!` });
+            activeGames.splice(socket.id, 1);
         }
+        else if (activeGames[i].player2 != onlineUsers[socket.id]) {
+            io.to(activeGames[i].player2).emit('game-over', { message: `Hai vinto a tavolino!` });
+            activeGames.splice(socket.id, 1);
+        }
+        
     }
 
     io.emit('update-users', Object.values(onlineUsers)); // Aggiorna la lista degli utenti
